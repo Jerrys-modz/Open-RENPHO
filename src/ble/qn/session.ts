@@ -24,7 +24,7 @@ import {
   type ScaleProfile,
 } from './protocol';
 
-export type Flavor = 'extended' | 'basic';
+export type Flavor = 'extended' | 'basic' | 'broadcast';
 
 export interface WeighIn {
   flavor: Flavor;

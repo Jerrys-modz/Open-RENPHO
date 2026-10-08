@@ -44,11 +44,12 @@ export class QnScaleConnection {
       if (error) return h.onError(error.message);
       if (!device || this.stopped) return;
       this.manager.stopDeviceScan();
-      void this.connect(device, h);
+      void this.connectDevice(device, h);
     });
   }
 
-  private async connect(found: Device, h: WeighInHandlers): Promise<void> {
+  /** Connects to a scale that was already found by a scan, and runs one weigh-in. */
+  async connectDevice(found: Device, h: WeighInHandlers): Promise<void> {
     try {
       h.onStatus(`Connecting to ${found.name ?? found.id}…`);
       const device = await found.connect();

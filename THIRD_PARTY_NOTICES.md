@@ -2,10 +2,11 @@
 
 ## renpho-escs20m
 
-The QN scale protocol handling (`src/ble/qn/protocol.ts`, `session.ts`) and the
-body-composition math (`src/ble/qn/bodyMetrics.ts`) are TypeScript ports of
+The QN scale protocol handling (`src/ble/qn/protocol.ts`, `session.ts`), the broadcast-only
+protocol (`src/ble/aabb/`) and the body-composition math (`src/ble/qn/bodyMetrics.ts`) are
+TypeScript ports of
 [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) by Ron.
-The golden body-fat test vectors come from that project's tests.
+The golden body-fat test vectors and the captured broadcast frames come from that project's tests.
 
 ```
 MIT License

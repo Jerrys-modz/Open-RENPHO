@@ -65,4 +65,21 @@ describe('weighInToMeasurements', () => {
     );
     expect(types(out)).toEqual(['weight', 'impedance']);
   });
+
+  describe('broadcast-only scale (no impedance)', () => {
+    const w = { flavor: 'broadcast' as const, weightKg: 74.95, bodyFat: null, resistance1: null, resistance2: null };
+
+    it('without a profile stores weight only', () => {
+      expect(types(weighInToMeasurements(w, 1))).toEqual(['weight']);
+    });
+
+    it('with a profile estimates body fat at a typical impedance, derives the rest, and stores no impedance', () => {
+      const out = weighInToMeasurements(w, Date.UTC(2026, 9, 7), PROFILE);
+      expect(types(out)).toContain('body_fat');
+      expect(types(out)).toContain('bmi');
+      expect(types(out)).not.toContain('impedance');
+      // Same inputs as the real golden (M 43y, 1.70 m, 74.95 kg) but with 500 ohm instead of 505: about 21%.
+      expect(get(out, 'body_fat')).toBeCloseTo(21, 0);
+    });
+  });
 });

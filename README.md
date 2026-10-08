@@ -6,7 +6,7 @@ An Expo (React Native) app that reads RENPHO Bluetooth devices locally, with no 
 
 | Piece | State |
 |---|---|
-| ES-CS20M scale (QN protocol), TypeScript port | implemented, unit-tested against golden vectors; **not yet run on hardware** |
+| ES-CS20M scale, TypeScript ports of both hardware variants (connectable QN, and broadcast-only for FCC ID 2APXUES-CS20M), tested against real captured frames | implemented; **not yet run on hardware** |
 | Weigh-in screen | minimal (weight + impedance) |
 | RF-BMF01 tape: protocol decoded, parser tested on real frames, live-length screen with save-on-checkmark | implemented; **not yet run in the app on hardware** |
 | Body-composition profile / history / settings | planned |

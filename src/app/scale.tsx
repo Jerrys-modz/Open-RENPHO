@@ -3,7 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { weighInToMeasurements } from '@/ble/qn/measurements';
 import { toScaleProfile } from '@/ble/qn/profile';
-import { QnScaleConnection } from '@/ble/qn/transport';
+import { ScaleConnection } from '@/ble/scale/connection';
 import type { Measurement } from '@/domain/measurement';
 import { DEMO_PROFILE, DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 import { addMeasurements } from '@/storage/useMeasurements';
@@ -17,21 +17,23 @@ import { formatNumber } from '@/util/format';
 export default function WeighInScreen() {
   const c = useColors();
   const profile = useProfile();
-  const conn = useRef<QnScaleConnection | null>(null);
+  const conn = useRef<ScaleConnection | null>(null);
   const [demo] = useState(() => readDemoMode() === 'scale');
   const [status, setStatus] = useState(demo ? 'Saved to your history' : 'Ready');
   const [live, setLive] = useState<number | null>(null);
   const [saved, setSaved] = useState<Measurement[] | null>(
     demo ? weighInToMeasurements(DEMO_WEIGH_IN, Date.UTC(2026, 9, 8), DEMO_PROFILE) : null,
   );
+  const [flavor, setFlavor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => () => conn.current?.destroy(), []);
 
   const begin = () => {
     conn.current?.destroy();
-    conn.current = new QnScaleConnection();
+    conn.current = new ScaleConnection();
     setSaved(null);
+    setFlavor(null);
     setLive(null);
     setError(null);
     const p = getProfile();
@@ -41,6 +43,7 @@ export default function WeighInScreen() {
       onStatus: setStatus,
       onLiveWeight: setLive,
       onWeighIn: (w) => {
+        setFlavor(w.flavor);
         const ms = weighInToMeasurements(w, Date.now(), getProfile());
         addMeasurements(ms);
         setSaved(ms);
@@ -104,6 +107,12 @@ export default function WeighInScreen() {
       <ThemedText subtle style={styles.hint}>
         Tap the button, then step on the scale barefoot. It wakes up when you stand on it.
       </ThemedText>
+      {flavor === 'broadcast' && (
+        <ThemedText subtle style={styles.hint}>
+          This scale model only broadcasts your weight and sends no impedance, so body fat and the numbers derived from it are
+          estimated from your weight, height, age and sex.
+        </ThemedText>
+      )}
       {profile && rows.length > 0 && (
         <ThemedText subtle style={styles.hint}>
           BMI, water, muscle, bone and the rest are calculated from your body fat, so they can differ from the RENPHO app.
