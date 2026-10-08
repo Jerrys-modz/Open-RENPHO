@@ -28,6 +28,13 @@
     "scheme": "open-renpho",
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "1ce902f9-f582-4cd2-a2b7-488ec9bebdf1"
+      }
+    },
+    "owner": "snowdeatroyers-team"
   }
 }
