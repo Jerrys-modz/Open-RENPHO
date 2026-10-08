@@ -4,8 +4,9 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { readDemoMode } from '@/demo';
 import { latestWithDelta, seriesFor } from '@/storage/measurements';
 import { useMeasurements } from '@/storage/useMeasurements';
+import { useProfile } from '@/storage/useProfile';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
-import { METRICS, metricById, type MetricDef } from '@/ui/metrics';
+import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
 import { TrendChart } from '@/ui/TrendChart';
 import { formatDateTime, formatDelta, formatNumber, formatShortDate } from '@/util/format';
@@ -16,21 +17,22 @@ export default function Overview() {
   // CI screenshots: a demo-mode file picks the screen to open (see src/demo.ts).
   const [demo] = useState(readDemoMode);
   const list = useMeasurements();
+  const profile = useProfile();
   const [selected, setSelected] = useState('weight');
 
-  if (demo === 'scale' || demo === 'tape') return <Redirect href={demo === 'scale' ? '/scale' : '/tape'} />;
+  if (demo === 'scale' || demo === 'tape' || demo === 'profile') return <Redirect href={`/${demo}`} />;
 
   const def = metricById(selected);
   const series = seriesFor(list, def.key);
   const latest = latestWithDelta(list, def.key);
   const hasData = list.length > 0;
 
-  const weight = latestWithDelta(list, METRICS[0].key);
-  const scaleRows = [METRICS[0], METRICS[1]].flatMap((m) => {
+  const weight = latestWithDelta(list, SCALE_METRICS[0].key);
+  const scaleRows = SCALE_METRICS.flatMap((m) => {
     const l = latestWithDelta(list, m.key);
     return l ? [{ m, l }] : [];
   });
-  const tapeRows = METRICS.filter((m) => m.key.type === 'circumference').flatMap((m) => {
+  const tapeRows = TAPE_METRICS.flatMap((m) => {
     const l = latestWithDelta(list, m.key);
     return l ? [{ m, l }] : [];
   });
@@ -76,6 +78,16 @@ export default function Overview() {
           </ThemedText>
         )}
       </Card>
+
+      {!profile && (
+        <Card>
+          <ThemedText style={styles.profileTitle}>Set up your profile</ThemedText>
+          <ThemedText subtle style={styles.profileText}>
+            Add your sex, age and height to get body fat, BMI, water, muscle and bone from your scale.
+          </ThemedText>
+          <Button title="Set up profile" variant="secondary" onPress={() => router.push('/profile')} style={styles.profileButton} />
+        </Card>
+      )}
 
       {scaleRows.length > 0 && weight && (
         <>
@@ -129,4 +141,7 @@ const styles = StyleSheet.create({
   delta: { fontSize: 15, marginTop: 4 },
   empty: { textAlign: 'center', paddingVertical: 24 },
   actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  profileTitle: { fontSize: 17, fontWeight: '600' },
+  profileText: { fontSize: 14 },
+  profileButton: { flex: 0 },
 });

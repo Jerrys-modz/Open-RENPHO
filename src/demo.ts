@@ -1,10 +1,14 @@
 import { File, Paths } from 'expo-file-system';
 import type { WeighIn } from '@/ble/qn/session';
+import { deriveBodyMetrics } from '@/ble/qn/bodyMetrics';
 import type { Measurement } from '@/domain/measurement';
+import type { UserProfile } from '@/domain/profile';
 
-export type DemoScreen = 'home' | 'scale' | 'tape';
+export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile';
 
-const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape'];
+const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile'];
+
+export const DEMO_PROFILE: UserProfile = { sex: 'male', birthDate: '1983-03-14', heightCm: 178, athlete: false };
 
 /** Pure parser for the text of the `demo-mode` file. Returns null for anything unrecognised. */
 export function parseDemoMode(text: string): DemoScreen | null {
@@ -49,8 +53,23 @@ export function demoMeasurements(): Measurement[] {
     const takenAt = DEMO_NOW - (days - 1 - i) * DAY;
     const w = 80.6 - i * 0.12 + Math.sin(i / 2.5) * 0.35;
     const bf = 23.1 - i * 0.045 + Math.sin(i / 3) * 0.25;
-    out.push({ type: 'weight', value: Math.round(w * 100) / 100, takenAt, source: 'qn-scale' });
-    out.push({ type: 'body_fat', value: Math.round(bf * 10) / 10, takenAt, source: 'qn-scale' });
+    const weight = Math.round(w * 100) / 100;
+    const bodyFat = Math.round(bf * 10) / 10;
+    out.push({ type: 'weight', value: weight, takenAt, source: 'qn-scale' });
+    out.push({ type: 'body_fat', value: bodyFat, takenAt, source: 'qn-scale' });
+    const d = deriveBodyMetrics(weight, DEMO_PROFILE.heightCm / 100, 0, bodyFat);
+    for (const [type, value] of [
+      ['bmi', d.bmi],
+      ['body_water', d.bodyWater],
+      ['skeletal_muscle', d.skeletalMuscle],
+      ['muscle_mass', d.muscleMass],
+      ['fat_free_mass', d.fatFreeMass],
+      ['bone_mass', d.boneMass],
+      ['protein', d.protein],
+      ['bmr', d.bmr],
+    ] as const) {
+      out.push({ type, value, takenAt, source: 'qn-scale' });
+    }
   }
   const sites: [string, number, number][] = [
     ['waist', 91.0, -0.7],

@@ -1,23 +1,29 @@
+import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import type { WeighIn } from '@/ble/qn/session';
 import { weighInToMeasurements } from '@/ble/qn/measurements';
+import { toScaleProfile } from '@/ble/qn/profile';
 import { QnScaleConnection } from '@/ble/qn/transport';
-import { DEMO_WEIGH_IN, readDemoMode } from '@/demo';
+import type { Measurement } from '@/domain/measurement';
+import { DEMO_PROFILE, DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 import { addMeasurements } from '@/storage/useMeasurements';
+import { getProfile, useProfile } from '@/storage/useProfile';
 import { Button, Card, MetricRow } from '@/ui/components';
-import { METRICS } from '@/ui/metrics';
+import { SCALE_METRICS } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatNumber } from '@/util/format';
 
 export default function WeighInScreen() {
   const c = useColors();
+  const profile = useProfile();
   const conn = useRef<QnScaleConnection | null>(null);
   const [demo] = useState(() => readDemoMode() === 'scale');
   const [status, setStatus] = useState(demo ? 'Saved to your history' : 'Ready');
   const [live, setLive] = useState<number | null>(null);
-  const [result, setResult] = useState<WeighIn | null>(demo ? DEMO_WEIGH_IN : null);
+  const [saved, setSaved] = useState<Measurement[] | null>(
+    demo ? weighInToMeasurements(DEMO_WEIGH_IN, Date.UTC(2026, 9, 8), DEMO_PROFILE) : null,
+  );
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => () => conn.current?.destroy(), []);
@@ -25,15 +31,19 @@ export default function WeighInScreen() {
   const begin = () => {
     conn.current?.destroy();
     conn.current = new QnScaleConnection();
-    setResult(null);
+    setSaved(null);
     setLive(null);
     setError(null);
+    const p = getProfile();
     conn.current.start({
+      // Without a profile we tell the scale not to calculate body fat.
+      profile: p ? toScaleProfile(p) : undefined,
       onStatus: setStatus,
       onLiveWeight: setLive,
       onWeighIn: (w) => {
-        setResult(w);
-        addMeasurements(weighInToMeasurements(w, Date.now()));
+        const ms = weighInToMeasurements(w, Date.now(), getProfile());
+        addMeasurements(ms);
+        setSaved(ms);
         setStatus('Saved to your history');
       },
       onError: (m) => {
@@ -43,7 +53,13 @@ export default function WeighInScreen() {
     });
   };
 
-  const shown = result?.weightKg ?? live;
+  const weight = saved?.find((m) => m.type === 'weight')?.value ?? live;
+  const impedance = saved?.find((m) => m.type === 'impedance')?.value;
+  const rows = SCALE_METRICS.flatMap((def) => {
+    const m = saved?.find((x) => x.type === def.key.type);
+    return m ? [{ def, value: m.value }] : [];
+  });
+
   return (
     <ScrollView contentContainerStyle={styles.container}>
       <Card style={styles.hero}>
@@ -51,7 +67,7 @@ export default function WeighInScreen() {
           {status}
         </ThemedText>
         <ThemedText style={styles.weight}>
-          {shown === null ? '--' : formatNumber(shown, 2)}{' '}
+          {weight === null || weight === undefined ? '--' : formatNumber(weight, 2)}{' '}
           <ThemedText subtle style={styles.unit}>
             kg
           </ThemedText>
@@ -59,21 +75,40 @@ export default function WeighInScreen() {
         {error && <ThemedText style={{ color: c.danger, textAlign: 'center' }}>{error}</ThemedText>}
       </Card>
 
-      {result && (
+      {!profile && (
         <Card>
-          <MetricRow def={METRICS[0]} value={formatNumber(result.weightKg, 2)} />
-          {result.bodyFat !== null && <MetricRow def={METRICS[1]} value={formatNumber(result.bodyFat, 1)} />}
-          <View style={[styles.detail, { borderTopColor: c.border }]}>
-            <ThemedText subtle>Impedance</ThemedText>
-            <ThemedText>{result.resistance1 ?? 'n/a'} Ω</ThemedText>
-          </View>
+          <ThemedText style={styles.profileTitle}>Add your profile for body fat and more</ThemedText>
+          <ThemedText subtle style={styles.hint}>
+            The scale only measures weight and impedance. Body fat, BMI, water, muscle and bone are calculated from your sex,
+            age and height.
+          </ThemedText>
+          <Button title="Set up profile" variant="secondary" onPress={() => router.push('/profile')} style={styles.profileButton} />
         </Card>
       )}
 
-      <Button title={result ? 'Weigh again' : 'Start weigh-in'} onPress={begin} style={styles.button} />
+      {rows.length > 0 && (
+        <Card>
+          {rows.map(({ def, value }) => (
+            <MetricRow key={def.id} def={def} value={formatNumber(value, def.key.type === 'weight' ? 2 : def.digits)} />
+          ))}
+          {impedance !== undefined && (
+            <View style={[styles.detail, { borderTopColor: c.border }]}>
+              <ThemedText subtle>Impedance</ThemedText>
+              <ThemedText>{impedance} Ω</ThemedText>
+            </View>
+          )}
+        </Card>
+      )}
+
+      <Button title={saved ? 'Weigh again' : 'Start weigh-in'} onPress={begin} style={styles.button} />
       <ThemedText subtle style={styles.hint}>
         Tap the button, then step on the scale barefoot. It wakes up when you stand on it.
       </ThemedText>
+      {profile && rows.length > 0 && (
+        <ThemedText subtle style={styles.hint}>
+          BMI, water, muscle, bone and the rest are calculated from your body fat, so they can differ from the RENPHO app.
+        </ThemedText>
+      )}
     </ScrollView>
   );
 }
@@ -84,6 +119,8 @@ const styles = StyleSheet.create({
   status: { fontSize: 15 },
   weight: { fontSize: 64, fontWeight: '700' },
   unit: { fontSize: 24, fontWeight: '400' },
+  profileTitle: { fontSize: 17, fontWeight: '600' },
+  profileButton: { flex: 0 },
   detail: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   button: { flex: 0 },
   hint: { textAlign: 'center', fontSize: 13 },
