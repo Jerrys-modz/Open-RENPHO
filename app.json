@@ -1,0 +1,28 @@
+{
+  "expo": {
+    "name": "Open RENPHO",
+    "slug": "open-renpho",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "com.jerrysmodz.openrenpho"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-status-bar",
+      [
+        "react-native-ble-plx",
+        {
+          "bluetoothAlwaysPermission": "Open RENPHO connects to your RENPHO scale and tape measure over Bluetooth to read your measurements."
+        }
+      ]
+    ],
+    "scheme": "open-renpho",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
