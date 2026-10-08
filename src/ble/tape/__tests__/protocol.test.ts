@@ -21,6 +21,7 @@ describe('parseTapeFrame', () => {
       secondary: 0,
       tertiary: 0,
       suffix: 'PM',
+      trigger: 'live',
       displayUnit: 'metric',
     });
   });
@@ -50,6 +51,22 @@ describe('inch display mode', () => {
     if (frame?.kind !== 'reading') return;
     expect(lengthCm(frame)).toBeCloseTo(9.3, 5);
     expect(lengthCm(frame) / 2.54).toBeCloseTo(3.66, 2);
+  });
+});
+
+describe('checkmark (save) frames', () => {
+  // Captured with the tape showing 12.4 in (= 31.50 cm); checkmark pressed twice.
+  const live = parseTapeFrame(bytes('2A30 3331 3530 3B30 3030 3030 3B30 3030 3050 490A'));
+  const save = parseTapeFrame(bytes('2A30 3331 3530 3B30 3030 3030 3B30 3030 3053 490A'));
+
+  it('P frames are live, S frames are save events, with the same length', () => {
+    expect(live).toMatchObject({ kind: 'reading', primary: 3150, trigger: 'live', displayUnit: 'imperial' });
+    expect(save).toMatchObject({ kind: 'reading', primary: 3150, trigger: 'save', displayUnit: 'imperial', suffix: 'SI' });
+  });
+
+  it('31.50 cm is 12.4 in', () => {
+    if (save?.kind !== 'reading') throw new Error('expected a reading');
+    expect(lengthCm(save) / 2.54).toBeCloseTo(12.4, 1);
   });
 });
 

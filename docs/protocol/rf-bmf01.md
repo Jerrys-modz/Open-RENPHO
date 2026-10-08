@@ -45,12 +45,18 @@ Captured with nRF Connect on iPhone, 2026-10-08.
 - A frame of 20 zero bytes arrives now and then, ~120 ms before a `*00000...` frame.
   Treated as an idle heartbeat.
 
-**Unit (resolved, one inch-mode data point)**
+**Unit (confirmed on two lengths)**
 - Field 1 is hundredths of a cm regardless of the tape's display unit.
-  In inch mode the tape displayed 3.66 in while field 1 was `00930` and the suffix `PI`
-  (9.30 cm / 2.54 = 3.661 in).
-- Suffix = the tape's display unit: `PM` metric (cm), `PI` imperial (inches).
+  Inch mode: showed 3.66 in -> `00930`; showed 12.4 in -> `03150` (31.50 cm = 12.40 in).
+
+**Suffix = [trigger][unit]**
+- Second letter: `M` metric display, `I` imperial display.
+- First letter: `P` for normal frames; `S` for ~0.4 s after the checkmark button is pressed.
+  Capture (tape at 12.4 in, two checkmark presses): `PI` at 08:27:47 (cached on subscribe),
+  `SI` 08:27:50.979, `PI` 08:27:51.399, `SI` 08:27:52.419, `PI` 08:27:52.839.
+  "S" = save is inferred; the number of presses was not recorded.
+- The tape only notifies on change or button press: it was silent while held still.
 
 **Still unknown**
-- What fields 2 and 3 are. Probably change when the tape's button is pressed (lock/hold).
-- Only one inch-mode sample so far; a second length (e.g. a measured 30 cm) would confirm the scale.
+- What fields 2 and 3 are (always 0 so far).
+- Whether "S" really is "save" (needs the press count to match).

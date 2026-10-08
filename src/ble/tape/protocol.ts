@@ -6,12 +6,18 @@
  * docs/protocol/rf-bmf01.md. No handshake was needed: notifications start as
  * soon as they're enabled.
  *
- * Field 1 is the live length in hundredths of a cm, whatever unit the tape is
- * displaying. Evidence: in inch mode the tape showed 3.66 in while field 1 was
- * 00930 (9.30 cm = 3.661 in). The suffix is the tape's display unit: "PM"
- * (metric, cm) and "PI" (imperial, inches). One inch-mode data point so far.
- * The meaning of fields 2 and 3 is unconfirmed, so the parser also returns the
- * raw integers.
+ * Field 1 is the length in hundredths of a cm, whatever unit the tape is
+ * displaying. Evidence: 00930 while the tape showed 3.66 in, and 03150 while it
+ * showed 12.4 in (31.50 cm = 12.40 in).
+ *
+ * The two-letter suffix is [trigger][unit]:
+ *  - trigger: "P" for normal streaming frames; "S" for ~0.4 s after the
+ *    checkmark button is pressed (inferred "save"; one capture, two presses).
+ *  - unit: "M" metric display, "I" imperial display.
+ * The tape only notifies on change or button press, not continuously.
+ *
+ * The meaning of fields 2 and 3 is unconfirmed (always 0 so far), so the
+ * parser also returns the raw integers.
  */
 
 export const TAPE_SERVICE = '0783b03e-8535-b5a0-7140-a304d2495cb7';
@@ -28,8 +34,10 @@ export type TapeFrame =
       secondary: number;
       /** Third field; always 0 in captures so far. */
       tertiary: number;
-      /** Two-letter suffix: "PM" (metric display) or "PI" (imperial display). */
+      /** Two-letter suffix, e.g. "PM", "PI", "SI". */
       suffix: string;
+      /** "save" when the checkmark button was just pressed ("S"), "live" otherwise ("P"). */
+      trigger: 'live' | 'save' | 'unknown';
       /** The unit the tape's own display is set to. Does not change `primary`. */
       displayUnit: 'metric' | 'imperial' | 'unknown';
     }
@@ -51,7 +59,8 @@ export function parseTapeFrame(bytes: Uint8Array): TapeFrame | null {
     secondary: Number(m[2]),
     tertiary: Number(m[3]),
     suffix: m[4],
-    displayUnit: m[4] === 'PM' ? 'metric' : m[4] === 'PI' ? 'imperial' : 'unknown',
+    trigger: m[4][0] === 'P' ? 'live' : m[4][0] === 'S' ? 'save' : 'unknown',
+    displayUnit: m[4][1] === 'M' ? 'metric' : m[4][1] === 'I' ? 'imperial' : 'unknown',
   };
 }
 
