@@ -11,6 +11,11 @@ const KG_TARE = bytes('aabbed6739c5aa0a5b3e236a948b1f030000004c0903ec3e');
 const LB_FINAL = bytes('aabbed673b1aaa067986066a40b64b2500931c4c4403691f'); // 73.15 kg, display in lb
 const LB_PROVISIONAL = bytes('aabbed673b1aaa061387066a40b64b6422841c4c44030620');
 
+// Captured from the project owner's own scale (MAC ed:67:39:53:49:85, display set to lb) with nRF Connect.
+const OWN_IDLE = bytes('aabbed6739534985fcffc76affffff0400' + '0000004b05037312'); // nothing on the scale
+const OWN_BLIP = bytes('aabbed6739534985d6ffc76affffff04' + '0060044b05032812'); // brief 11.20 kg touch
+const OWN_FINAL = bytes('aabbed67395349859100c86affffff25' + '00762a4b05030313'); // standing on it; display showed 239.6 lb
+
 /** Prefixes the company ID the way ble-plx returns manufacturer data. */
 const withCompany = (payload: Uint8Array) => Uint8Array.from([0xff, 0xff, ...payload]);
 
@@ -45,6 +50,35 @@ describe('parseBroadcast', () => {
     bad[0] = 0xcc;
     expect(parseBroadcast(COMPANY_ID, bad)).toBeNull();
     expect(parseBroadcast(COMPANY_ID, KG_FINAL.subarray(0, 10))).toBeNull();
+  });
+});
+
+describe('real frames from the owner\'s scale', () => {
+  it('idle: weight 0, not final, lb display', () => {
+    expect(parseBroadcast(COMPANY_ID, OWN_IDLE)).toEqual({
+      mac: 'ed:67:39:53:49:85',
+      weightKg: 0,
+      final: false,
+      displayUnit: 'lb',
+      status: 0x04,
+    });
+  });
+
+  it('a brief touch is a live weight, not a reading', () => {
+    expect(parseBroadcast(COMPANY_ID, OWN_BLIP)).toMatchObject({ weightKg: 11.2, final: false });
+  });
+
+  it('locked frame: 108.70 kg, which is the 239.6 lb the scale displayed', () => {
+    const f = parseBroadcast(COMPANY_ID, OWN_FINAL);
+    expect(f).toMatchObject({ weightKg: 108.7, final: true, displayUnit: 'lb', status: 0x25 });
+    expect(f!.weightKg * 2.2046226).toBeCloseTo(239.6, 1);
+  });
+
+  it('the session produces exactly one reading from idle then final frames', () => {
+    const readings: number[] = [];
+    const s = new AabbSession({ onWeighIn: (w) => readings.push(w.weightKg) });
+    for (const f of [OWN_IDLE, OWN_FINAL, OWN_FINAL, OWN_IDLE]) s.handleManufacturerData(withCompany(f));
+    expect(readings).toEqual([108.7]);
   });
 });
 

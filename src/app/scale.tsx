@@ -8,15 +8,17 @@ import type { Measurement } from '@/domain/measurement';
 import { DEMO_PROFILE, DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 import { addMeasurements } from '@/storage/useMeasurements';
 import { getProfile, useProfile } from '@/storage/useProfile';
+import { useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricRow } from '@/ui/components';
 import { SCALE_METRICS } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
-import { formatNumber } from '@/util/format';
+import { formatForDisplay } from '@/util/units';
 
 export default function WeighInScreen() {
   const c = useColors();
   const profile = useProfile();
+  const units = useUnits();
   const conn = useRef<ScaleConnection | null>(null);
   const [demo] = useState(() => readDemoMode() === 'scale');
   const [status, setStatus] = useState(demo ? 'Saved to your history' : 'Ready');
@@ -70,9 +72,9 @@ export default function WeighInScreen() {
           {status}
         </ThemedText>
         <ThemedText style={styles.weight}>
-          {weight === null || weight === undefined ? '--' : formatNumber(weight, 2)}{' '}
+          {weight === null || weight === undefined ? '--' : formatForDisplay({ unit: 'kg', digits: 2 }, weight, units).text}{' '}
           <ThemedText subtle style={styles.unit}>
-            kg
+            {units === 'imperial' ? 'lb' : 'kg'}
           </ThemedText>
         </ThemedText>
         {error && <ThemedText style={{ color: c.danger, textAlign: 'center' }}>{error}</ThemedText>}
@@ -92,7 +94,12 @@ export default function WeighInScreen() {
       {rows.length > 0 && (
         <Card>
           {rows.map(({ def, value }) => (
-            <MetricRow key={def.id} def={def} value={formatNumber(value, def.key.type === 'weight' ? 2 : def.digits)} />
+            <MetricRow
+              key={def.id}
+              def={def}
+              value={formatForDisplay(def.key.type === 'weight' ? { ...def, digits: 2 } : def, value, units).text}
+              unit={formatForDisplay(def, value, units).unit}
+            />
           ))}
           {impedance !== undefined && (
             <View style={[styles.detail, { borderTopColor: c.border }]}>

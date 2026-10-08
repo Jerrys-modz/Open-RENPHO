@@ -5,11 +5,13 @@ import { readDemoMode } from '@/demo';
 import { latestWithDelta, seriesFor } from '@/storage/measurements';
 import { useMeasurements } from '@/storage/useMeasurements';
 import { useProfile } from '@/storage/useProfile';
+import { useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
 import { TrendChart } from '@/ui/TrendChart';
-import { formatDateTime, formatDelta, formatNumber, formatShortDate } from '@/util/format';
+import { formatDateTime, formatShortDate } from '@/util/format';
+import { convertValue, formatDeltaForDisplay, formatForDisplay, type UnitSystem } from '@/util/units';
 
 const arrow = (d: number) => (d > 0 ? '↑' : d < 0 ? '↓' : '→');
 
@@ -18,6 +20,7 @@ export default function Overview() {
   const [demo] = useState(readDemoMode);
   const list = useMeasurements();
   const profile = useProfile();
+  const units = useUnits();
   const [selected, setSelected] = useState('weight');
 
   if (demo === 'scale' || demo === 'tape' || demo === 'profile') return <Redirect href={`/${demo}`} />;
@@ -58,15 +61,15 @@ export default function Overview() {
               {def.label}
             </ThemedText>
             <ThemedText style={styles.big}>
-              {latest ? formatNumber(latest.point.v, def.digits) : '--'}{' '}
+              {latest ? formatForDisplay(def, latest.point.v, units).text : '--'}{' '}
               <ThemedText subtle style={styles.unit}>
-                {def.unit}
+                {convertValue(0, def.unit, units).unit}
               </ThemedText>
             </ThemedText>
           </View>
           {latest?.delta != null && (
             <ThemedText subtle style={styles.delta}>
-              {arrow(latest.delta)} {formatDelta(latest.delta, def.digits)} {def.unit}
+              {deltaText(latest.delta, def, units)}
             </ThemedText>
           )}
         </View>
@@ -94,7 +97,13 @@ export default function Overview() {
           <SectionTitle>{formatDateTime(weight.point.t)}</SectionTitle>
           <Card>
             {scaleRows.map(({ m, l }) => (
-              <MetricRow key={m.id} def={m} value={formatNumber(l.point.v, m.digits)} delta={deltaText(l.delta, m)} />
+              <MetricRow
+                key={m.id}
+                def={m}
+                value={formatForDisplay(m, l.point.v, units).text}
+                unit={formatForDisplay(m, l.point.v, units).unit}
+                delta={deltaText(l.delta, m, units)}
+              />
             ))}
           </Card>
         </>
@@ -108,8 +117,9 @@ export default function Overview() {
               <MetricRow
                 key={m.id}
                 def={m}
-                value={formatNumber(l.point.v, m.digits)}
-                delta={deltaText(l.delta, m)}
+                value={formatForDisplay(m, l.point.v, units).text}
+                unit={formatForDisplay(m, l.point.v, units).unit}
+                delta={deltaText(l.delta, m, units)}
                 caption={formatShortDate(l.point.t)}
               />
             ))}
@@ -125,8 +135,10 @@ export default function Overview() {
   );
 }
 
-function deltaText(d: number | null, m: MetricDef): string | null {
-  return d === null ? null : `${arrow(d)} ${formatDelta(d, m.digits)} ${m.unit}`;
+function deltaText(d: number | null, m: MetricDef, units: UnitSystem): string | null {
+  if (d === null) return null;
+  const f = formatDeltaForDisplay(m, d, units);
+  return `${arrow(d)} ${f.text}${f.unit ? ` ${f.unit}` : ''}`;
 }
 
 const styles = StyleSheet.create({

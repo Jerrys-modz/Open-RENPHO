@@ -4,17 +4,25 @@ import { TapeConnection } from '@/ble/tape/transport';
 import type { Measurement } from '@/domain/measurement';
 import { DEMO_TAPE, readDemoMode } from '@/demo';
 import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
+import { useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, metricById } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
-import { formatDateTime, formatNumber } from '@/util/format';
+import { formatDateTime } from '@/util/format';
+import { formatForDisplay, type UnitSystem } from '@/util/units';
 
 const SITE_DEFS = METRICS.filter((m) => m.key.type === 'circumference');
 const CM_PER_IN = 2.54;
+const CM_DEF = { unit: 'cm', digits: 1 };
+
+/** The other system's value, for the small line under the big one. */
+const otherUnit = (cm: number, units: UnitSystem) =>
+  units === 'metric' ? `${(cm / CM_PER_IN).toFixed(2)} in` : `${cm.toFixed(1)} cm`;
 
 export default function TapeScreen() {
   const c = useColors();
+  const units = useUnits();
   const conn = useRef<TapeConnection | null>(null);
   const siteRef = useRef<string>(SITE_DEFS[0].id);
   const [site, setSite] = useState<string>(SITE_DEFS[0].id);
@@ -69,13 +77,13 @@ export default function TapeScreen() {
           {status}
         </ThemedText>
         <ThemedText style={styles.length}>
-          {cm === null ? '--' : formatNumber(cm, 1)}{' '}
+          {cm === null ? '--' : formatForDisplay(CM_DEF, cm, units).text}{' '}
           <ThemedText subtle style={styles.unit}>
-            cm
+            {units === 'imperial' ? 'in' : 'cm'}
           </ThemedText>
         </ThemedText>
         <ThemedText subtle style={styles.inches}>
-          {cm === null ? ' ' : `${formatNumber(cm / CM_PER_IN, 2)} in`}
+          {cm === null ? ' ' : otherUnit(cm, units)}
         </ThemedText>
         {error && <ThemedText style={{ color: c.danger, textAlign: 'center' }}>{error}</ThemedText>}
       </Card>
@@ -115,8 +123,9 @@ export default function TapeScreen() {
             <MetricRow
               key={`${m.takenAt}-${m.site}`}
               def={metricById(m.site ?? 'waist')}
-              value={formatNumber(m.value, 1)}
-              caption={`${formatNumber(m.value / CM_PER_IN, 2)} in  ·  ${formatDateTime(m.takenAt)}`}
+              value={formatForDisplay(CM_DEF, m.value, units).text}
+              unit={formatForDisplay(CM_DEF, m.value, units).unit}
+              caption={`${otherUnit(m.value, units)}  ·  ${formatDateTime(m.takenAt)}`}
             />
           ))
         )}

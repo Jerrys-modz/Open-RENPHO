@@ -2,7 +2,7 @@
 
 Source: ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT).
 The upstream author had captures from two scales but no live hardware, so this is
-**experimental until verified on a real scale**.
+**now verified on the project owner's own scale** (see below).
 
 ## How to tell if you have this one
 
@@ -44,3 +44,17 @@ BMI (from weight and your height) is exact.
 2. Compare the weight the app shows with the scale's display.
 3. If a connectable device with service `FFF0` shows up instead, you have the other revision; see
    `qn-scale.md`. The app handles both from the same Weigh in button.
+
+## Verified on real hardware
+
+Captured with nRF Connect from an ES-CS20M with FCC ID `2APXUES-CS20M`, MAC `ED:67:39:53:49:85`, display set to lb:
+
+| Situation | Payload (from `AA BB`) | Decoded |
+|---|---|---|
+| Nothing on the scale | `aabbed6739534985 fcffc76a ffffff04 0000004b 05037312` | status `0x04`, weight 0 |
+| Brief touch | `aabbed6739534985 d6ffc76a ffffff04 0060044b 05032812` | status `0x04`, 11.20 kg |
+| Standing on it, locked | `aabbed6739534985 9100c86a ffffff25 00762a4b 05030313` | status `0x25`, **108.70 kg** = 239.64 lb; the display read 239.6 |
+
+Observations: the scale advertises continuously while idle (about every 130 ms, weak at -70 to -91 dBm, so
+keep the phone close); it is not connectable; bytes 8-9 and 22-23 change between packets (counters).
+Status `0x25` is final with lb display; `0x23` is the kg equivalent.

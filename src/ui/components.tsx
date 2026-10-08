@@ -52,11 +52,14 @@ export function MetricRow({
   value,
   delta,
   caption,
+  unit,
 }: {
   def: MetricDef;
   value: string;
   delta?: string | null;
   caption?: string;
+  /** Overrides the metric's own unit, for converted values. */
+  unit?: string;
 }) {
   return (
     <View style={styles.row}>
@@ -70,7 +73,7 @@ export function MetricRow({
         )}
       </View>
       <ThemedText style={styles.rowValue}>
-        {value} <ThemedText subtle style={styles.rowUnit}>{def.unit}</ThemedText>
+        {value}{(unit ?? def.unit) !== '' && ' '}<ThemedText subtle style={styles.rowUnit}>{unit ?? def.unit}</ThemedText>
       </ThemedText>
     </View>
   );
