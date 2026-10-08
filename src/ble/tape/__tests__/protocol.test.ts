@@ -21,6 +21,7 @@ describe('parseTapeFrame', () => {
       secondary: 0,
       tertiary: 0,
       suffix: 'PM',
+      displayUnit: 'metric',
     });
   });
 
@@ -36,8 +37,24 @@ describe('parseTapeFrame', () => {
   });
 });
 
+describe('inch display mode', () => {
+  // Captured with the tape displaying 3.66 in (= 9.30 cm).
+  const frame = parseTapeFrame(bytes('2A30 3039 3330 3B30 3030 3030 3B30 3030 3050 490A'));
+
+  it('reports the imperial display unit', () => {
+    expect(frame).toMatchObject({ kind: 'reading', primary: 930, suffix: 'PI', displayUnit: 'imperial' });
+  });
+
+  it('length is still hundredths of a cm: 930 -> 9.30 cm -> 3.66 in', () => {
+    expect(frame?.kind).toBe('reading');
+    if (frame?.kind !== 'reading') return;
+    expect(lengthCm(frame)).toBeCloseTo(9.3, 5);
+    expect(lengthCm(frame) / 2.54).toBeCloseTo(3.66, 2);
+  });
+});
+
 describe('lengthCm', () => {
-  it('converts captured peak 02050 to 20.5 cm (cm mode)', () => {
+  it('converts captured peak 02050 to 20.5 cm', () => {
     const f = parseTapeFrame(bytes('2A30 3230 3530 3B30 3030 3030 3B30 3030 3050 4D0A'));
     expect(f?.kind).toBe('reading');
     if (f?.kind === 'reading') expect(lengthCm(f)).toBeCloseTo(20.5, 5);

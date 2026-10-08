@@ -6,10 +6,12 @@
  * docs/protocol/rf-bmf01.md. No handshake was needed: notifications start as
  * soon as they're enabled.
  *
- * Field 1 is the live length in hundredths of a cm when the tape is in cm mode
- * (inferred: peak captured value 02050 while the tape was in cm mode; not yet
- * checked against a ruler). The meaning of fields 2 and 3 and the "PM" suffix is
- * unconfirmed, so the parser also returns the raw integers.
+ * Field 1 is the live length in hundredths of a cm, whatever unit the tape is
+ * displaying. Evidence: in inch mode the tape showed 3.66 in while field 1 was
+ * 00930 (9.30 cm = 3.661 in). The suffix is the tape's display unit: "PM"
+ * (metric, cm) and "PI" (imperial, inches). One inch-mode data point so far.
+ * The meaning of fields 2 and 3 is unconfirmed, so the parser also returns the
+ * raw integers.
  */
 
 export const TAPE_SERVICE = '0783b03e-8535-b5a0-7140-a304d2495cb7';
@@ -26,8 +28,10 @@ export type TapeFrame =
       secondary: number;
       /** Third field; always 0 in captures so far. */
       tertiary: number;
-      /** Two-letter suffix, "PM" in every capture. */
+      /** Two-letter suffix: "PM" (metric display) or "PI" (imperial display). */
       suffix: string;
+      /** The unit the tape's own display is set to. Does not change `primary`. */
+      displayUnit: 'metric' | 'imperial' | 'unknown';
     }
   // 20 zero bytes, sent as a heartbeat between readings.
   | { kind: 'idle' };
@@ -47,10 +51,11 @@ export function parseTapeFrame(bytes: Uint8Array): TapeFrame | null {
     secondary: Number(m[2]),
     tertiary: Number(m[3]),
     suffix: m[4],
+    displayUnit: m[4] === 'PM' ? 'metric' : m[4] === 'PI' ? 'imperial' : 'unknown',
   };
 }
 
-/** Length in cm for a reading frame, assuming the tape is in cm mode. */
+/** Length in cm for a reading frame (independent of the tape's display unit). */
 export function lengthCm(frame: Extract<TapeFrame, { kind: 'reading' }>): number {
   return frame.primary / 100;
 }

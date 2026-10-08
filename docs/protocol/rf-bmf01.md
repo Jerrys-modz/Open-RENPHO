@@ -41,11 +41,16 @@ Captured with nRF Connect on iPhone, 2026-10-08.
   e.g. `2A30 3230 3530 3B...` = `*02050;00000;0000PM`.
 - Field 1 follows the live length (220, 720, 1580, ... 2050 while moving, 0 when retracted).
   All captured values are multiples of 10.
-- Fields 2 and 3 were always 0, and the suffix always `PM`.
+- Fields 2 and 3 were always 0. The suffix was `PM` with the tape in cm mode.
 - A frame of 20 zero bytes arrives now and then, ~120 ms before a `*00000...` frame.
   Treated as an idle heartbeat.
 
-**Still unknown (need ground truth)**
-- Unit of field 1: tape was in cm mode, so field 1 = hundredths of a cm (02050 = 20.50 cm; resolution 0.1 cm). Inferred, **not yet checked against a ruler**.
-- What fields 2 and 3 are. Probably change when the tape's button is pressed (lock/hold) or the unit is toggled.
-- What `PM` means.
+**Unit (resolved, one inch-mode data point)**
+- Field 1 is hundredths of a cm regardless of the tape's display unit.
+  In inch mode the tape displayed 3.66 in while field 1 was `00930` and the suffix `PI`
+  (9.30 cm / 2.54 = 3.661 in).
+- Suffix = the tape's display unit: `PM` metric (cm), `PI` imperial (inches).
+
+**Still unknown**
+- What fields 2 and 3 are. Probably change when the tape's button is pressed (lock/hold).
+- Only one inch-mode sample so far; a second length (e.g. a measured 30 cm) would confirm the scale.
