@@ -11,7 +11,18 @@ export function Card({ children, style }: { children: ReactNode; style?: StylePr
 }
 
 /** Round, colour-coded metric icon (grey when `active` is false), as in openScale. */
-export function MetricIcon({ def, size = 44, active = true }: { def: MetricDef; size?: number; active?: boolean }) {
+export function MetricIcon({
+  def,
+  size = 44,
+  active = true,
+  selected = false,
+}: {
+  def: MetricDef;
+  size?: number;
+  active?: boolean;
+  /** Draws a ring around the icon, for the currently chosen chip. */
+  selected?: boolean;
+}) {
   const c = useColors();
   return (
     <View
@@ -22,6 +33,8 @@ export function MetricIcon({ def, size = 44, active = true }: { def: MetricDef; 
         alignItems: 'center',
         justifyContent: 'center',
         backgroundColor: active ? def.color : c.chipOff,
+        borderWidth: 3,
+        borderColor: selected ? c.text : 'transparent',
       }}
     >
       <SymbolView

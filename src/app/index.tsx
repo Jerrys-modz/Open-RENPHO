@@ -39,8 +39,12 @@ export default function Overview() {
     <ScrollView contentContainerStyle={styles.container}>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
         {METRICS.map((m) => (
-          <Pressable key={m.id} onPress={() => setSelected(m.id)} accessibilityLabel={m.label}>
-            <MetricIcon def={m} active={m.id === selected} />
+          <Pressable key={m.id} onPress={() => setSelected(m.id)} accessibilityLabel={m.label} style={styles.chip}>
+            {/* Colour when there is data for it, grey when there isn't; a ring marks the chosen one. */}
+            <MetricIcon def={m} active={seriesFor(list, m.key).length > 0} selected={m.id === selected} />
+            <ThemedText subtle={m.id !== selected} style={styles.chipLabel}>
+              {m.label}
+            </ThemedText>
           </Pressable>
         ))}
       </ScrollView>
@@ -115,7 +119,9 @@ function deltaText(d: number | null, m: MetricDef): string | null {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
-  chips: { gap: 10, paddingVertical: 4 },
+  chips: { gap: 12, paddingVertical: 4 },
+  chip: { alignItems: 'center', gap: 4 },
+  chipLabel: { fontSize: 12 },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   small: { fontSize: 14 },
   big: { fontSize: 34, fontWeight: '700' },

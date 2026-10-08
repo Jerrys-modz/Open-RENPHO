@@ -72,7 +72,7 @@ export default function WeighInScreen() {
 
       <Button title={result ? 'Weigh again' : 'Start weigh-in'} onPress={begin} style={styles.button} />
       <ThemedText subtle style={styles.hint}>
-        Tap Start, then step on the scale barefoot. It wakes up when you stand on it.
+        Tap the button, then step on the scale barefoot. It wakes up when you stand on it.
       </ThemedText>
     </ScrollView>
   );
