@@ -8,8 +8,8 @@ An Expo (React Native) app that reads RENPHO Bluetooth devices locally, with no 
 |---|---|
 | ES-CS20M scale (QN protocol), TypeScript port | implemented, unit-tested against golden vectors; **not yet run on hardware** |
 | Weigh-in screen | minimal (weight + impedance) |
+| RF-BMF01 tape: protocol decoded, parser tested on real frames, live-length screen with save-on-checkmark | implemented; **not yet run in the app on hardware** |
 | Body-composition profile / history / settings | planned |
-| RF-BMF01 tape measure | protocol unknown, see `docs/protocol/rf-bmf01.md` |
 | SparkyFitness sync | planned |
 | Apple Health sync | planned |
 

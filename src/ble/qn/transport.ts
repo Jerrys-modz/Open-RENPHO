@@ -2,8 +2,9 @@
  * react-native-ble-plx glue for QN scales. Everything protocol-related lives
  * in session.ts; this file only scans, connects and shuttles bytes.
  */
-import { BleManager, type Device, type Subscription } from 'react-native-ble-plx';
+import type { Device, Subscription } from 'react-native-ble-plx';
 import { base64ToBytes, bytesToBase64 } from '../base64';
+import { getBleManager } from '../manager';
 import { COMMAND_CHAR, NOTIFY_CHAR, SERVICE_FFF0 } from './protocol';
 import { QnSession, type QnSessionOptions, type WeighIn } from './session';
 
@@ -16,7 +17,7 @@ export interface WeighInHandlers {
 }
 
 export class QnScaleConnection {
-  private manager = new BleManager();
+  private manager = getBleManager();
   private device: Device | null = null;
   private subscription: Subscription | null = null;
   private stopped = false;
@@ -106,6 +107,5 @@ export class QnScaleConnection {
 
   destroy(): void {
     void this.stop();
-    void this.manager.destroy();
   }
 }
