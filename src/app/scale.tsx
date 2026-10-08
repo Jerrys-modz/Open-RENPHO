@@ -84,8 +84,7 @@ export default function WeighInScreen() {
         <Card>
           <ThemedText style={styles.profileTitle}>Add your profile for body fat and more</ThemedText>
           <ThemedText subtle style={styles.hint}>
-            The scale only measures weight and impedance. Body fat, BMI, water, muscle and bone are calculated from your sex,
-            age and height.
+            The scale reports your weight. Body fat, BMI, water, muscle and bone are calculated from your sex, age and height.
           </ThemedText>
           <Button title="Set up profile" variant="secondary" onPress={() => router.push('/profile')} style={styles.profileButton} />
         </Card>

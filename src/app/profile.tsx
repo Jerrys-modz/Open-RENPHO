@@ -52,8 +52,8 @@ export default function ProfileScreen() {
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <ThemedText subtle style={styles.intro}>
-        Your scale only measures weight and impedance. Body fat and everything derived from it (BMI, water, muscle, bone,
-        BMR) is calculated from your sex, age and height. This stays on your phone.
+        Your scale reports your weight. Body fat and everything derived from it (BMI, water, muscle, bone, BMR) is
+        calculated from your sex, age and height. This stays on your phone.
       </ThemedText>
 
       <SectionTitle>Units</SectionTitle>
