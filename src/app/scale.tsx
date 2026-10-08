@@ -2,12 +2,14 @@ import { useEffect, useRef, useState } from 'react';
 import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
 import { QnScaleConnection } from '@/ble/qn/transport';
 import type { WeighIn } from '@/ble/qn/session';
+import { DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 
 export default function WeighInScreen() {
   const conn = useRef<QnScaleConnection | null>(null);
-  const [status, setStatus] = useState('Idle');
+  const [demo] = useState(() => readDemoMode() === 'scale');
+  const [status, setStatus] = useState(demo ? 'Done' : 'Idle');
   const [live, setLive] = useState<number | null>(null);
-  const [result, setResult] = useState<WeighIn | null>(null);
+  const [result, setResult] = useState<WeighIn | null>(demo ? DEMO_WEIGH_IN : null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => () => conn.current?.destroy(), []);

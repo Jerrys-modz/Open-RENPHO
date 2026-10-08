@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Button, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
 import { TapeConnection } from '@/ble/tape/transport';
+import { DEMO_TAPE, readDemoMode } from '@/demo';
 
 const SITES = ['waist', 'hips', 'chest', 'neck', 'bicep', 'thigh', 'calf'] as const;
 const CM_PER_IN = 2.54;
@@ -15,10 +16,11 @@ export default function TapeScreen() {
   const conn = useRef<TapeConnection | null>(null);
   const siteRef = useRef<string>(SITES[0]);
   const [site, setSite] = useState<string>(SITES[0]);
-  const [status, setStatus] = useState('Idle');
-  const [cm, setCm] = useState<number | null>(null);
-  const [saved, setSaved] = useState<Saved[]>([]);
-  const [raw, setRaw] = useState<string[]>([]);
+  const [demo] = useState(() => readDemoMode() === 'tape');
+  const [status, setStatus] = useState(demo ? 'Connected. Measure with the tape; press ✓ to save.' : 'Idle');
+  const [cm, setCm] = useState<number | null>(demo ? DEMO_TAPE.cm : null);
+  const [saved, setSaved] = useState<Saved[]>(demo ? DEMO_TAPE.saved : []);
+  const [raw, setRaw] = useState<string[]>(demo ? ['*03150;00000;0000PI\\x0a'] : []);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {

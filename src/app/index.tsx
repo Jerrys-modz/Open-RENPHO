@@ -1,7 +1,12 @@
-import { Link } from 'expo-router';
+import { Link, Redirect } from 'expo-router';
+import { readDemoMode } from '@/demo';
+import { useState } from 'react';
 import { StyleSheet, Text, View } from 'react-native';
 
 export default function Home() {
+  // CI screenshots: a demo-mode file picks the screen to open (see src/demo.ts).
+  const [demo] = useState(readDemoMode);
+  if (demo === 'scale' || demo === 'tape') return <Redirect href={demo === 'scale' ? '/scale' : '/tape'} />;
   return (
     <View style={styles.container}>
       <Link href="/scale" style={styles.link}>
