@@ -3,6 +3,7 @@
  * in session.ts; this file only scans, connects and shuttles bytes.
  */
 import type { Device, Subscription } from 'react-native-ble-plx';
+import type { UserProfile } from '@/domain/profile';
 import { base64ToBytes, bytesToBase64 } from '../base64';
 import { getBleManager } from '../manager';
 import { COMMAND_CHAR, NOTIFY_CHAR, SERVICE_FFF0 } from './protocol';
@@ -14,6 +15,8 @@ export interface WeighInHandlers {
   onWeighIn: (w: WeighIn) => void;
   onError: (message: string) => void;
   profile?: QnSessionOptions['profile'];
+  /** The user's own profile, for scales that store it (Beurer). */
+  userProfile?: UserProfile | null;
 }
 
 export class QnScaleConnection {

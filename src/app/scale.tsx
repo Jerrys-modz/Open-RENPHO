@@ -42,11 +42,12 @@ export default function WeighInScreen() {
     conn.current.start({
       // Without a profile we tell the scale not to calculate body fat.
       profile: p ? toScaleProfile(p) : undefined,
+      userProfile: p,
       onStatus: setStatus,
       onLiveWeight: setLive,
       onWeighIn: (w) => {
         setFlavor(w.flavor);
-        const ms = weighInToMeasurements(w, Date.now(), getProfile());
+        const ms = weighInToMeasurements(w, w.takenAt ?? Date.now(), getProfile());
         addMeasurements(ms);
         setSaved(ms);
         setStatus('Saved to your history');
@@ -113,6 +114,11 @@ export default function WeighInScreen() {
       <ThemedText subtle style={styles.hint}>
         Tap the button, then step on the scale barefoot. It wakes up when you stand on it.
       </ThemedText>
+      {flavor === 'beurer' && (
+        <ThemedText subtle style={styles.hint}>
+          Body fat, water, BMR and impedance come from your Beurer scale. Bone mass and protein are estimated.
+        </ThemedText>
+      )}
       {flavor === 'broadcast' && (
         <ThemedText subtle style={styles.hint}>
           This scale model only broadcasts your weight and sends no impedance, so body fat and the numbers derived from it are

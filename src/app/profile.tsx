@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, useColorScheme, View } from 'react-native';
 import { readDemoMode } from '@/demo';
 import { fromIsoDate, toIsoDate, validateProfile, type Sex } from '@/domain/profile';
+import { clearBeurerPairing, loadBeurerPairing } from '@/storage/beurerPairing';
 import { saveProfile, useProfile } from '@/storage/useProfile';
 import { setUnits, useUnits } from '@/storage/useSettings';
 import { Button, Card, SectionTitle } from '@/ui/components';
@@ -27,6 +28,7 @@ export default function ProfileScreen() {
   const [height, setHeight] = useState(existing ? heightToInput(existing.heightCm, units) : '');
   const [athlete, setAthlete] = useState(existing?.athlete ?? false);
   const [errors, setErrors] = useState<string[]>([]);
+  const [beurerSlot, setBeurerSlot] = useState(() => loadBeurerPairing()?.userIndex ?? null);
 
   const save = () => {
     const r = validateProfile({ sex, birthDate: birth ? toIsoDate(birth) : '', heightCm: parseHeightToCm(height, units), athlete });
@@ -142,6 +144,25 @@ export default function ProfileScreen() {
       ))}
 
       <Button title="Save profile" onPress={save} style={styles.button} />
+      {beurerSlot !== null && (
+        <Card style={styles.athlete}>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={styles.athleteTitle}>Beurer scale: user {beurerSlot}</ThemedText>
+            <ThemedText subtle style={styles.athleteText}>
+              This phone holds user slot {beurerSlot} on your scale. Resetting forgets it here but does not free the slot.
+            </ThemedText>
+          </View>
+          <Button
+            title="Reset"
+            variant="secondary"
+            onPress={() => {
+              clearBeurerPairing();
+              setBeurerSlot(null);
+            }}
+            style={styles.resetButton}
+          />
+        </Card>
+      )}
       <Button title="Scale capture (debug)" variant="secondary" onPress={() => router.push('/capture')} style={styles.button} />
     </ScrollView>
   );
@@ -160,4 +181,5 @@ const styles = StyleSheet.create({
   athleteTitle: { fontSize: 17, fontWeight: '600' },
   athleteText: { fontSize: 13 },
   button: { flex: 0, marginTop: 8 },
+  resetButton: { flex: 0, paddingHorizontal: 16 },
 });
