@@ -4,9 +4,9 @@ import { deriveBodyMetrics } from '@/ble/qn/bodyMetrics';
 import type { Measurement } from '@/domain/measurement';
 import type { UserProfile } from '@/domain/profile';
 
-export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile';
+export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile' | 'capture';
 
-const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile'];
+const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile', 'capture'];
 
 export const DEMO_PROFILE: UserProfile = { sex: 'male', birthDate: '1983-03-14', heightCm: 178, athlete: false };
 
@@ -92,3 +92,13 @@ export function demoMeasurements(): Measurement[] {
   }
   return out;
 }
+
+/** Sample packets for the capture screen's screenshot: the owner's real idle, touch and locked frames (ms, hex). */
+export const DEMO_CAPTURE_FRAMES: readonly (readonly [number, string])[] = [
+  [0, 'aabbed6739534985fcffc76affffff040000004b05037312'],
+  [300, 'aabbed6739534985d6ffc76affffff040000004b05032812'],
+  [2400, 'aabbed6739534985d6ffc76affffff0400' + '60044b05032812'],
+  [5200, 'aabbed67395349859100c86affffff2500762a4b05030313'],
+  [5300, 'aabbed67395349859100c86affffff2500762a4b05030313'],
+  [9100, 'aabbed67395349858400c86affffff040000004b0503f812'],
+];

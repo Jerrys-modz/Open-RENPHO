@@ -24,6 +24,7 @@ export default function RootLayout() {
         <Stack.Screen name="scale" options={{ title: 'Weigh in' }} />
         <Stack.Screen name="tape" options={{ title: 'Tape measure' }} />
         <Stack.Screen name="profile" options={{ title: 'Profile' }} />
+        <Stack.Screen name="capture" options={{ title: 'Scale capture' }} />
       </Stack>
       <StatusBar style="auto" />
     </ThemeProvider>

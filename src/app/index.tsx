@@ -23,7 +23,7 @@ export default function Overview() {
   const units = useUnits();
   const [selected, setSelected] = useState('weight');
 
-  if (demo === 'scale' || demo === 'tape' || demo === 'profile') return <Redirect href={`/${demo}`} />;
+  if (demo === 'scale' || demo === 'tape' || demo === 'profile' || demo === 'capture') return <Redirect href={`/${demo}`} />;
 
   const def = metricById(selected);
   const series = seriesFor(list, def.key);

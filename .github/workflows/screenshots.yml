@@ -123,7 +123,7 @@ jobs:
             echo "Appearance is now: $(xcrun simctl ui "$UDID" appearance)"
 
             # The text of the demo-mode file picks the screen.
-            for SCREEN in home scale tape profile; do
+            for SCREEN in home scale tape profile capture; do
               echo "$SCREEN" > "$DATA/Documents/demo-mode"
               xcrun simctl launch "$UDID" "$BUNDLE_ID"
               sleep 8

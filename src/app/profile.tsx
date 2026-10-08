@@ -142,6 +142,7 @@ export default function ProfileScreen() {
       ))}
 
       <Button title="Save profile" onPress={save} style={styles.button} />
+      <Button title="Scale capture (debug)" variant="secondary" onPress={() => router.push('/capture')} style={styles.button} />
     </ScrollView>
   );
 }
