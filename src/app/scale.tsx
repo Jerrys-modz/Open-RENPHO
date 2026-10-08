@@ -1,16 +1,21 @@
-import { useTheme } from 'expo-router';
-import { ThemedText } from '@/ui/ThemedText';
 import { useEffect, useRef, useState } from 'react';
-import { Button, ScrollView, StyleSheet, View } from 'react-native';
-import { QnScaleConnection } from '@/ble/qn/transport';
+import { ScrollView, StyleSheet, View } from 'react-native';
 import type { WeighIn } from '@/ble/qn/session';
+import { weighInToMeasurements } from '@/ble/qn/measurements';
+import { QnScaleConnection } from '@/ble/qn/transport';
 import { DEMO_WEIGH_IN, readDemoMode } from '@/demo';
+import { addMeasurements } from '@/storage/useMeasurements';
+import { Button, Card, MetricRow } from '@/ui/components';
+import { METRICS } from '@/ui/metrics';
+import { useColors } from '@/ui/theme';
+import { ThemedText } from '@/ui/ThemedText';
+import { formatNumber } from '@/util/format';
 
 export default function WeighInScreen() {
-  const { colors } = useTheme();
+  const c = useColors();
   const conn = useRef<QnScaleConnection | null>(null);
   const [demo] = useState(() => readDemoMode() === 'scale');
-  const [status, setStatus] = useState(demo ? 'Done' : 'Idle');
+  const [status, setStatus] = useState(demo ? 'Saved to your history' : 'Ready');
   const [live, setLive] = useState<number | null>(null);
   const [result, setResult] = useState<WeighIn | null>(demo ? DEMO_WEIGH_IN : null);
   const [error, setError] = useState<string | null>(null);
@@ -26,38 +31,60 @@ export default function WeighInScreen() {
     conn.current.start({
       onStatus: setStatus,
       onLiveWeight: setLive,
-      onWeighIn: setResult,
+      onWeighIn: (w) => {
+        setResult(w);
+        addMeasurements(weighInToMeasurements(w, Date.now()));
+        setStatus('Saved to your history');
+      },
       onError: (m) => {
         setError(m);
-        setStatus('Error');
+        setStatus('Something went wrong');
       },
     });
   };
 
+  const shown = result?.weightKg ?? live;
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <ThemedText style={styles.status}>{status}</ThemedText>
-      <ThemedText style={styles.weight}>
-        {(result?.weightKg ?? live)?.toFixed(2) ?? '--'} <ThemedText style={styles.unit}>kg</ThemedText>
-      </ThemedText>
+      <Card style={styles.hero}>
+        <ThemedText subtle style={styles.status}>
+          {status}
+        </ThemedText>
+        <ThemedText style={styles.weight}>
+          {shown === null ? '--' : formatNumber(shown, 2)}{' '}
+          <ThemedText subtle style={styles.unit}>
+            kg
+          </ThemedText>
+        </ThemedText>
+        {error && <ThemedText style={{ color: c.danger, textAlign: 'center' }}>{error}</ThemedText>}
+      </Card>
+
       {result && (
-        <View style={[styles.card, { borderColor: colors.border }]}>
-          <ThemedText>Flavor: {result.flavor}</ThemedText>
-          <ThemedText>Impedance: {result.resistance1 ?? 'n/a'} Ω</ThemedText>
-          <ThemedText>On-device body fat: {result.bodyFat ?? 'n/a'}</ThemedText>
-        </View>
+        <Card>
+          <MetricRow def={METRICS[0]} value={formatNumber(result.weightKg, 2)} />
+          {result.bodyFat !== null && <MetricRow def={METRICS[1]} value={formatNumber(result.bodyFat, 1)} />}
+          <View style={[styles.detail, { borderTopColor: c.border }]}>
+            <ThemedText subtle>Impedance</ThemedText>
+            <ThemedText>{result.resistance1 ?? 'n/a'} Ω</ThemedText>
+          </View>
+        </Card>
       )}
-      {error && <ThemedText style={styles.error}>{error}</ThemedText>}
-      <Button title="Start weigh-in" onPress={begin} />
+
+      <Button title={result ? 'Weigh again' : 'Start weigh-in'} onPress={begin} style={styles.button} />
+      <ThemedText subtle style={styles.hint}>
+        Tap Start, then step on the scale barefoot. It wakes up when you stand on it.
+      </ThemedText>
     </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { padding: 24, gap: 16, alignItems: 'center' },
-  status: { fontSize: 16, opacity: 0.7 },
+  container: { padding: 16, gap: 12 },
+  hero: { alignItems: 'center', paddingVertical: 28 },
+  status: { fontSize: 15 },
   weight: { fontSize: 64, fontWeight: '700' },
   unit: { fontSize: 24, fontWeight: '400' },
-  card: { gap: 4, padding: 16, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
-  error: { color: 'crimson' },
+  detail: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
+  button: { flex: 0 },
+  hint: { textAlign: 'center', fontSize: 13 },
 });

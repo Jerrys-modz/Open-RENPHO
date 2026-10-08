@@ -1,30 +1,29 @@
-import { useTheme } from 'expo-router';
-import { ThemedText } from '@/ui/ThemedText';
 import { useEffect, useRef, useState } from 'react';
-import { Button, FlatList, Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { TapeConnection } from '@/ble/tape/transport';
+import type { Measurement } from '@/domain/measurement';
 import { DEMO_TAPE, readDemoMode } from '@/demo';
+import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
+import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
+import { METRICS, metricById } from '@/ui/metrics';
+import { useColors } from '@/ui/theme';
+import { ThemedText } from '@/ui/ThemedText';
+import { formatDateTime, formatNumber } from '@/util/format';
 
-const SITES = ['waist', 'hips', 'chest', 'neck', 'bicep', 'thigh', 'calf'] as const;
+const SITE_DEFS = METRICS.filter((m) => m.key.type === 'circumference');
 const CM_PER_IN = 2.54;
 
-interface Saved {
-  at: number;
-  cm: number;
-  site: string;
-}
-
 export default function TapeScreen() {
-  const { colors } = useTheme();
+  const c = useColors();
   const conn = useRef<TapeConnection | null>(null);
-  const siteRef = useRef<string>(SITES[0]);
-  const [site, setSite] = useState<string>(SITES[0]);
+  const siteRef = useRef<string>(SITE_DEFS[0].id);
+  const [site, setSite] = useState<string>(SITE_DEFS[0].id);
   const [demo] = useState(() => readDemoMode() === 'tape');
-  const [status, setStatus] = useState(demo ? 'Connected. Measure with the tape; press ✓ to save.' : 'Idle');
+  const [status, setStatus] = useState(demo ? 'Connected. Measure, then press ✓ on the tape to save.' : 'Ready');
   const [cm, setCm] = useState<number | null>(demo ? DEMO_TAPE.cm : null);
-  const [saved, setSaved] = useState<Saved[]>(demo ? DEMO_TAPE.saved : []);
   const [raw, setRaw] = useState<string[]>(demo ? ['*03150;00000;0000PI\\x0a'] : []);
   const [error, setError] = useState<string | null>(null);
+  const list = useMeasurements();
 
   useEffect(() => {
     return () => {
@@ -34,84 +33,125 @@ export default function TapeScreen() {
 
   const begin = () => {
     void conn.current?.stop();
-    const c = new TapeConnection();
-    conn.current = c;
+    const t = new TapeConnection();
+    conn.current = t;
     setError(null);
-    c.start({
+    t.start({
       onStatus: setStatus,
-      onRaw: (t) => setRaw((r) => [t, ...r].slice(0, 6)),
+      onRaw: (line) => setRaw((r) => [line, ...r].slice(0, 5)),
       onLength: (v) => setCm(v),
-      onSave: (v) => setSaved((s) => [{ at: Date.now(), cm: v, site: siteRef.current }, ...s]),
+      onSave: (v) => {
+        const m: Measurement = {
+          type: 'circumference',
+          value: v,
+          takenAt: Date.now(),
+          source: 'rf-bmf01',
+          site: siteRef.current,
+        };
+        addMeasurements([m]);
+      },
       onError: (m) => {
         setError(m);
-        setStatus('Error');
+        setStatus('Something went wrong');
       },
     });
   };
 
-  return (
-    <View style={styles.container}>
-      <ThemedText style={styles.status}>{status}</ThemedText>
-      <ThemedText style={styles.length}>
-        {cm === null ? '--' : cm.toFixed(1)} <ThemedText style={styles.unit}>cm</ThemedText>
-      </ThemedText>
-      <ThemedText style={styles.inches}>{cm === null ? '' : `${(cm / CM_PER_IN).toFixed(2)} in`}</ThemedText>
-      {error && <ThemedText style={styles.error}>{error}</ThemedText>}
-      <Button title="Connect tape" onPress={begin} />
+  const saved = list
+    .filter((m) => m.type === 'circumference')
+    .sort((a, b) => b.takenAt - a.takenAt)
+    .slice(0, 8);
 
-      <ThemedText style={styles.heading}>Body site for next save</ThemedText>
-      <View style={styles.sites}>
-        {SITES.map((s) => (
+  return (
+    <ScrollView contentContainerStyle={styles.container}>
+      <Card style={styles.hero}>
+        <ThemedText subtle style={styles.status}>
+          {status}
+        </ThemedText>
+        <ThemedText style={styles.length}>
+          {cm === null ? '--' : formatNumber(cm, 1)}{' '}
+          <ThemedText subtle style={styles.unit}>
+            cm
+          </ThemedText>
+        </ThemedText>
+        <ThemedText subtle style={styles.inches}>
+          {cm === null ? ' ' : `${formatNumber(cm / CM_PER_IN, 2)} in`}
+        </ThemedText>
+        {error && <ThemedText style={{ color: c.danger, textAlign: 'center' }}>{error}</ThemedText>}
+      </Card>
+
+      <Button title="Connect tape" onPress={begin} style={styles.button} />
+
+      <SectionTitle>Save next reading as</SectionTitle>
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.sites}>
+        {SITE_DEFS.map((d) => (
           <Pressable
-            key={s}
+            key={d.id}
+            style={styles.site}
             onPress={() => {
-              siteRef.current = s;
-              setSite(s);
+              siteRef.current = d.id;
+              setSite(d.id);
             }}
-            style={[styles.chip, { borderColor: colors.border }, s === site && styles.chipOn]}
           >
-            <ThemedText style={s === site ? styles.chipOnText : undefined}>{s}</ThemedText>
+            <MetricIcon def={d} active={d.id === site} />
+            <ThemedText subtle={d.id !== site} style={styles.siteLabel}>
+              {d.label}
+            </ThemedText>
           </Pressable>
         ))}
-      </View>
-      <ThemedText style={styles.hint}>Press ✓ on the tape to save a reading.</ThemedText>
+      </ScrollView>
+      <ThemedText subtle style={styles.hint}>
+        Pull the tape round, then press ✓ on it to save.
+      </ThemedText>
 
-      <FlatList
-        style={styles.list}
-        data={saved}
-        keyExtractor={(i) => String(i.at)}
-        ListEmptyComponent={<ThemedText style={styles.hint}>No saved readings yet.</ThemedText>}
-        renderItem={({ item }) => (
-          <ThemedText style={styles.row}>
-            {item.site}: {item.cm.toFixed(1)} cm ({(item.cm / CM_PER_IN).toFixed(2)} in)
+      <SectionTitle>Saved readings</SectionTitle>
+      <Card>
+        {saved.length === 0 ? (
+          <ThemedText subtle style={styles.hint}>
+            Nothing saved yet.
           </ThemedText>
+        ) : (
+          saved.map((m) => (
+            <MetricRow
+              key={`${m.takenAt}-${m.site}`}
+              def={metricById(m.site ?? 'waist')}
+              value={formatNumber(m.value, 1)}
+              caption={`${formatNumber(m.value / CM_PER_IN, 2)} in  ·  ${formatDateTime(m.takenAt)}`}
+            />
+          ))
         )}
-      />
+      </Card>
 
-      <ThemedText style={styles.heading}>Raw frames (debug)</ThemedText>
-      {raw.map((t, i) => (
-        <ThemedText key={i} style={styles.mono}>
-          {t}
-        </ThemedText>
-      ))}
-    </View>
+      <SectionTitle>Raw frames (debug)</SectionTitle>
+      <View style={[styles.debug, { backgroundColor: c.card }]}>
+        {raw.length === 0 ? (
+          <ThemedText subtle style={styles.mono}>
+            none yet
+          </ThemedText>
+        ) : (
+          raw.map((t, i) => (
+            <ThemedText key={i} style={styles.mono}>
+              {t}
+            </ThemedText>
+          ))
+        )}
+      </View>
+    </ScrollView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, padding: 24, gap: 8 },
-  status: { fontSize: 16, opacity: 0.7, textAlign: 'center' },
-  length: { fontSize: 64, fontWeight: '700', textAlign: 'center' },
+  container: { padding: 16, gap: 12 },
+  hero: { alignItems: 'center', paddingVertical: 24, gap: 4 },
+  status: { fontSize: 15, textAlign: 'center' },
+  length: { fontSize: 64, fontWeight: '700' },
   unit: { fontSize: 24, fontWeight: '400' },
-  inches: { fontSize: 20, textAlign: 'center', opacity: 0.7 },
-  error: { color: 'crimson', textAlign: 'center' },
-  heading: { marginTop: 12, fontWeight: '600' },
-  sites: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { paddingVertical: 6, paddingHorizontal: 12, borderRadius: 16, borderWidth: StyleSheet.hairlineWidth },
-  chipOn: { backgroundColor: '#0a84ff', borderColor: '#0a84ff' },
-  chipOnText: { color: 'white' },
-  hint: { opacity: 0.6 },
-  list: { flexGrow: 0, maxHeight: 160 },
-  row: { paddingVertical: 4 },
+  inches: { fontSize: 20 },
+  button: { flex: 0 },
+  sites: { gap: 14, paddingVertical: 4 },
+  site: { alignItems: 'center', gap: 4 },
+  siteLabel: { fontSize: 12 },
+  hint: { fontSize: 13, textAlign: 'center' },
+  debug: { borderRadius: 12, padding: 12, gap: 2 },
   mono: { fontFamily: 'Menlo', fontSize: 12 },
 });
