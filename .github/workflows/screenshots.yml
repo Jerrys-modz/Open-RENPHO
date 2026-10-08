@@ -45,6 +45,15 @@ jobs:
       - name: Prebuild iOS project
         run: npx expo prebuild --platform ios
 
+      # Best effort: the Xcode build is ~19 minutes from cold. Reusing DerivedData lets
+      # xcodebuild skip compiling unchanged native code. A miss just costs a full build.
+      - uses: actions/cache@v4
+        with:
+          path: build
+          key: ios-build-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}
+          restore-keys: |
+            ios-build-${{ runner.os }}-
+
       # Release, not Debug: a Debug build opens Metro-dependent dev screens instead of the app.
       # Release bundles the JS into the app.
       - name: Build for the simulator

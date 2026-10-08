@@ -1,10 +1,13 @@
+import { useTheme } from 'expo-router';
+import { ThemedText } from '@/ui/ThemedText';
 import { useEffect, useRef, useState } from 'react';
-import { Button, ScrollView, StyleSheet, Text, View } from 'react-native';
+import { Button, ScrollView, StyleSheet, View } from 'react-native';
 import { QnScaleConnection } from '@/ble/qn/transport';
 import type { WeighIn } from '@/ble/qn/session';
 import { DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 
 export default function WeighInScreen() {
+  const { colors } = useTheme();
   const conn = useRef<QnScaleConnection | null>(null);
   const [demo] = useState(() => readDemoMode() === 'scale');
   const [status, setStatus] = useState(demo ? 'Done' : 'Idle');
@@ -33,18 +36,18 @@ export default function WeighInScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.status}>{status}</Text>
-      <Text style={styles.weight}>
-        {(result?.weightKg ?? live)?.toFixed(2) ?? '--'} <Text style={styles.unit}>kg</Text>
-      </Text>
+      <ThemedText style={styles.status}>{status}</ThemedText>
+      <ThemedText style={styles.weight}>
+        {(result?.weightKg ?? live)?.toFixed(2) ?? '--'} <ThemedText style={styles.unit}>kg</ThemedText>
+      </ThemedText>
       {result && (
-        <View style={styles.card}>
-          <Text>Flavor: {result.flavor}</Text>
-          <Text>Impedance: {result.resistance1 ?? 'n/a'} Ω</Text>
-          <Text>On-device body fat: {result.bodyFat ?? 'n/a'}</Text>
+        <View style={[styles.card, { borderColor: colors.border }]}>
+          <ThemedText>Flavor: {result.flavor}</ThemedText>
+          <ThemedText>Impedance: {result.resistance1 ?? 'n/a'} Ω</ThemedText>
+          <ThemedText>On-device body fat: {result.bodyFat ?? 'n/a'}</ThemedText>
         </View>
       )}
-      {error && <Text style={styles.error}>{error}</Text>}
+      {error && <ThemedText style={styles.error}>{error}</ThemedText>}
       <Button title="Start weigh-in" onPress={begin} />
     </ScrollView>
   );

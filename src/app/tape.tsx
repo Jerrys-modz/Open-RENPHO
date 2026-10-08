@@ -1,5 +1,7 @@
+import { useTheme } from 'expo-router';
+import { ThemedText } from '@/ui/ThemedText';
 import { useEffect, useRef, useState } from 'react';
-import { Button, FlatList, Pressable, StyleSheet, Text, View } from 'react-native';
+import { Button, FlatList, Pressable, StyleSheet, View } from 'react-native';
 import { TapeConnection } from '@/ble/tape/transport';
 import { DEMO_TAPE, readDemoMode } from '@/demo';
 
@@ -13,6 +15,7 @@ interface Saved {
 }
 
 export default function TapeScreen() {
+  const { colors } = useTheme();
   const conn = useRef<TapeConnection | null>(null);
   const siteRef = useRef<string>(SITES[0]);
   const [site, setSite] = useState<string>(SITES[0]);
@@ -48,15 +51,15 @@ export default function TapeScreen() {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.status}>{status}</Text>
-      <Text style={styles.length}>
-        {cm === null ? '--' : cm.toFixed(1)} <Text style={styles.unit}>cm</Text>
-      </Text>
-      <Text style={styles.inches}>{cm === null ? '' : `${(cm / CM_PER_IN).toFixed(2)} in`}</Text>
-      {error && <Text style={styles.error}>{error}</Text>}
+      <ThemedText style={styles.status}>{status}</ThemedText>
+      <ThemedText style={styles.length}>
+        {cm === null ? '--' : cm.toFixed(1)} <ThemedText style={styles.unit}>cm</ThemedText>
+      </ThemedText>
+      <ThemedText style={styles.inches}>{cm === null ? '' : `${(cm / CM_PER_IN).toFixed(2)} in`}</ThemedText>
+      {error && <ThemedText style={styles.error}>{error}</ThemedText>}
       <Button title="Connect tape" onPress={begin} />
 
-      <Text style={styles.heading}>Body site for next save</Text>
+      <ThemedText style={styles.heading}>Body site for next save</ThemedText>
       <View style={styles.sites}>
         {SITES.map((s) => (
           <Pressable
@@ -65,31 +68,31 @@ export default function TapeScreen() {
               siteRef.current = s;
               setSite(s);
             }}
-            style={[styles.chip, s === site && styles.chipOn]}
+            style={[styles.chip, { borderColor: colors.border }, s === site && styles.chipOn]}
           >
-            <Text style={s === site ? styles.chipOnText : undefined}>{s}</Text>
+            <ThemedText style={s === site ? styles.chipOnText : undefined}>{s}</ThemedText>
           </Pressable>
         ))}
       </View>
-      <Text style={styles.hint}>Press ✓ on the tape to save a reading.</Text>
+      <ThemedText style={styles.hint}>Press ✓ on the tape to save a reading.</ThemedText>
 
       <FlatList
         style={styles.list}
         data={saved}
         keyExtractor={(i) => String(i.at)}
-        ListEmptyComponent={<Text style={styles.hint}>No saved readings yet.</Text>}
+        ListEmptyComponent={<ThemedText style={styles.hint}>No saved readings yet.</ThemedText>}
         renderItem={({ item }) => (
-          <Text style={styles.row}>
+          <ThemedText style={styles.row}>
             {item.site}: {item.cm.toFixed(1)} cm ({(item.cm / CM_PER_IN).toFixed(2)} in)
-          </Text>
+          </ThemedText>
         )}
       />
 
-      <Text style={styles.heading}>Raw frames (debug)</Text>
+      <ThemedText style={styles.heading}>Raw frames (debug)</ThemedText>
       {raw.map((t, i) => (
-        <Text key={i} style={styles.mono}>
+        <ThemedText key={i} style={styles.mono}>
           {t}
-        </Text>
+        </ThemedText>
       ))}
     </View>
   );
