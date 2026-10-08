@@ -15,6 +15,8 @@ An Expo (React Native) app that reads RENPHO Bluetooth devices locally, with no 
 
 ## Running
 
+To get a build on your iPhone without a Mac, see [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md).
+
 BLE needs native code, so **Expo Go will not work**. Use a development build on a real iPhone:
 
 ```bash

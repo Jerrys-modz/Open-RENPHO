@@ -34,7 +34,12 @@
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
     "test": "jest",
-    "test:ci": "jest --ci --coverage"
+    "test:ci": "jest --ci --coverage",
+    "build:ios": "eas build --platform ios --profile production",
+    "submit:ios": "eas submit --platform ios --profile production --latest",
+    "build:testflight": "eas build --platform ios --profile testflight --non-interactive --no-wait",
+    "submit:testflight": "eas submit --platform ios --profile testflight --latest --non-interactive",
+    "build:device": "eas build --platform ios --profile development"
   },
   "private": true,
   "jest": {
