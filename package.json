@@ -31,7 +31,8 @@
     "ios": "expo run:ios",
     "lint": "expo lint",
     "typecheck": "tsc --noEmit",
-    "test": "jest"
+    "test": "jest",
+    "test:ci": "jest --ci --coverage"
   },
   "private": true,
   "jest": {

@@ -1,0 +1,9 @@
+version: 2
+updates:
+  # Keep the pinned GitHub Actions current. npm packages are deliberately not listed: Expo,
+  # React Native and their native modules must move together with the Expo SDK
+  # (`npx expo install --fix`), which per-package bumps would break.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
