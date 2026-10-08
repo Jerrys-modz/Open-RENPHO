@@ -79,6 +79,7 @@ export default function ProfileScreen() {
           value={birth ?? DEFAULT_PICK}
           mode="date"
           display="spinner"
+          style={styles.picker}
           maximumDate={new Date()}
           minimumDate={OLDEST}
           themeVariant={scheme === 'dark' ? 'dark' : 'light'}
@@ -125,6 +126,8 @@ const styles = StyleSheet.create({
   segment: { flexDirection: 'row', gap: 10 },
   segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
   input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 14, fontSize: 17 },
+  // The iOS spinner has a fixed width and sits at the left edge unless centred.
+  picker: { alignSelf: 'center' },
   dateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   athlete: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   athleteTitle: { fontSize: 17, fontWeight: '600' },
