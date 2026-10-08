@@ -20,4 +20,32 @@ device. Coordinate on the issue before duplicating effort.
 
 ## Findings
 
-_(empty)_
+Captured with nRF Connect on iPhone, 2026-10-08.
+
+**Advertisement**
+- Local name `ES-Tape`; no advertised service UUIDs, so the app must match on the name.
+- Manufacturer data, company ID `0x1A10`: `00 08 00 0A F0 2C 59 C3 0B F7 01 03`.
+  Bytes 4..9 are the device MAC (forward order), matching the 0x55aa advert layout
+  described in renpho-escs20m. Meaning of `00 08 00 0A` and `01 03` unknown.
+
+**GATT** (besides Generic Access and Generic Attribute)
+- Service `0783B03E-8535-B5A0-7140-A304D2495CB7`
+  - `...CB8`: Notify (has a CCCD)
+  - `...CBA`: Write Without Response (no commands needed so far)
+- No Battery or Device Information service.
+- The tape drops the connection after about 20-45 s of use.
+
+**Data**
+- Enabling notifications on `...CB8` is enough; no write is needed.
+- Each notification is a 20-byte ASCII line: `*DDDDD;DDDDD;DDDDDPM\n`,
+  e.g. `2A30 3230 3530 3B...` = `*02050;00000;0000PM`.
+- Field 1 follows the live length (220, 720, 1580, ... 2050 while moving, 0 when retracted).
+  All captured values are multiples of 10.
+- Fields 2 and 3 were always 0, and the suffix always `PM`.
+- A frame of 20 zero bytes arrives now and then, ~120 ms before a `*00000...` frame.
+  Treated as an idle heartbeat.
+
+**Still unknown (need ground truth)**
+- Unit of field 1: 0.01 cm? mm? inches? Needs a known length (ruler).
+- What fields 2 and 3 are. Probably change when the tape's button is pressed (lock/hold) or the unit is toggled.
+- What `PM` means.
