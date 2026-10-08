@@ -1,4 +1,4 @@
-import { parseTapeFrame } from '../protocol';
+import { lengthCm, parseTapeFrame } from '../protocol';
 
 const bytes = (h: string) => new Uint8Array(Buffer.from(h.replace(/\s/g, ''), 'hex'));
 
@@ -33,5 +33,13 @@ describe('parseTapeFrame', () => {
     expect(parseTapeFrame(bytes('2A3030'))).toBeNull();
     expect(parseTapeFrame(new TextEncoder().encode('*0205;00000;0000PM\n'))).toBeNull();
     expect(parseTapeFrame(new TextEncoder().encode('*02050,00000;0000PM\n'))).toBeNull();
+  });
+});
+
+describe('lengthCm', () => {
+  it('converts captured peak 02050 to 20.5 cm (cm mode)', () => {
+    const f = parseTapeFrame(bytes('2A30 3230 3530 3B30 3030 3030 3B30 3030 3050 4D0A'));
+    expect(f?.kind).toBe('reading');
+    if (f?.kind === 'reading') expect(lengthCm(f)).toBeCloseTo(20.5, 5);
   });
 });

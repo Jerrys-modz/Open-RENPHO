@@ -6,8 +6,10 @@
  * docs/protocol/rf-bmf01.md. No handshake was needed: notifications start as
  * soon as they're enabled.
  *
- * The unit and the meaning of fields 2 and 3 and the "PM" suffix are NOT yet
- * confirmed, so this parser returns raw integers.
+ * Field 1 is the live length in hundredths of a cm when the tape is in cm mode
+ * (inferred: peak captured value 02050 while the tape was in cm mode; not yet
+ * checked against a ruler). The meaning of fields 2 and 3 and the "PM" suffix is
+ * unconfirmed, so the parser also returns the raw integers.
  */
 
 export const TAPE_SERVICE = '0783b03e-8535-b5a0-7140-a304d2495cb7';
@@ -46,4 +48,9 @@ export function parseTapeFrame(bytes: Uint8Array): TapeFrame | null {
     tertiary: Number(m[3]),
     suffix: m[4],
   };
+}
+
+/** Length in cm for a reading frame, assuming the tape is in cm mode. */
+export function lengthCm(frame: Extract<TapeFrame, { kind: 'reading' }>): number {
+  return frame.primary / 100;
 }

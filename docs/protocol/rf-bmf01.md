@@ -46,6 +46,6 @@ Captured with nRF Connect on iPhone, 2026-10-08.
   Treated as an idle heartbeat.
 
 **Still unknown (need ground truth)**
-- Unit of field 1: 0.01 cm? mm? inches? Needs a known length (ruler).
+- Unit of field 1: tape was in cm mode, so field 1 = hundredths of a cm (02050 = 20.50 cm; resolution 0.1 cm). Inferred, **not yet checked against a ruler**.
 - What fields 2 and 3 are. Probably change when the tape's button is pressed (lock/hold) or the unit is toggled.
 - What `PM` means.
