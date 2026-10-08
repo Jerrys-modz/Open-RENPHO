@@ -28,7 +28,8 @@ Status values seen: `0x02` settling (live weight), `0x03` with weight 0 = tare, 
 (stable bit but not final), `0x23` / `0x25` final (kg / lb display).
 
 The scale repeats its final frame for a whole burst, so the app delivers one reading and ignores
-repeats for 10 s (the real burst length is not known).
+repeats for 10 s (the real burst length is not known), or until a zero-weight frame shows you stepped
+off (the scale returns to status `0x04`, weight 0, and the display shows 0).
 
 ## No impedance
 

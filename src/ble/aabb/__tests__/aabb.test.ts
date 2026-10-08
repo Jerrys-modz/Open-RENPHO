@@ -137,6 +137,25 @@ describe('AabbSession', () => {
     expect(weighIns).toHaveLength(0);
   });
 
+  it('stepping off (zero weight) allows a new reading well before the cooldown ends', () => {
+    const { session, weighIns, advance } = setup();
+    session.handleManufacturerData(withCompany(OWN_FINAL));
+    advance(3_000);
+    session.handleManufacturerData(withCompany(OWN_IDLE)); // stepped off
+    advance(1_000);
+    session.handleManufacturerData(withCompany(OWN_FINAL)); // stepped back on, 4 s after the first
+    expect(weighIns).toHaveLength(2);
+  });
+
+  it('a zero-weight frame right after a reading does not re-arm it (guards against a glitch mid-burst)', () => {
+    const { session, weighIns, advance } = setup();
+    session.handleManufacturerData(withCompany(OWN_FINAL));
+    advance(500);
+    session.handleManufacturerData(withCompany(OWN_IDLE));
+    session.handleManufacturerData(withCompany(OWN_FINAL));
+    expect(weighIns).toHaveLength(1);
+  });
+
   it('ignores advertisements that are not from this kind of scale', () => {
     const { session, weighIns } = setup();
     expect(session.handleManufacturerData(Uint8Array.from([0x4c, 0x00, 0x01, 0x02]))).toBe(false);

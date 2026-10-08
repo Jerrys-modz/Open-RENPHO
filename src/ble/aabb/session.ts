@@ -7,8 +7,11 @@ export interface AabbSessionOptions {
   /**
    * The scale repeats its final frame for a whole advertising burst; ignore repeats for this
    * long so one weigh-in gives one reading. The real burst length is not known yet, so err long.
+   * (Stepping off, which the scale reports as a zero-weight frame, ends the wait early.)
    */
   cooldownMs?: number;
+  /** A zero-weight frame this soon after a reading is not trusted as "stepped off". */
+  minStepOffMs?: number;
   now?: () => number;
 }
 
@@ -17,10 +20,12 @@ export class AabbSession {
   private mac: string | null = null;
   private lastDeliveredAt = -Infinity;
   private readonly cooldownMs: number;
+  private readonly minStepOffMs: number;
   private readonly now: () => number;
 
   constructor(private readonly opts: AabbSessionOptions) {
     this.cooldownMs = opts.cooldownMs ?? 10_000;
+    this.minStepOffMs = opts.minStepOffMs ?? 2_000;
     this.now = opts.now ?? Date.now;
   }
 
@@ -35,8 +40,13 @@ export class AabbSession {
     if (this.mac === null) this.mac = frame.mac;
     else if (frame.mac !== this.mac) return true;
 
+    const t = this.now();
+    // Idle: nothing on the scale. Seen after you step off (the owner's capture: status 0x04, weight 0).
+    if (frame.weightKg === 0 && t - this.lastDeliveredAt >= this.minStepOffMs) {
+      this.lastDeliveredAt = -Infinity;
+    }
+
     if (frame.final) {
-      const t = this.now();
       if (t - this.lastDeliveredAt >= this.cooldownMs) {
         this.lastDeliveredAt = t;
         this.opts.onWeighIn({
