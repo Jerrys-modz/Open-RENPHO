@@ -21,3 +21,7 @@ export function formatDateTime(t: number): string {
 export function formatShortDate(t: number): string {
   return new Date(t).toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
 }
+
+export function formatLongDate(d: Date): string {
+  return d.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+}

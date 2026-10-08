@@ -1,23 +1,32 @@
+import DateTimePicker from '@react-native-community/datetimepicker';
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, Switch, TextInput, View } from 'react-native';
-import { validateProfile, type Sex } from '@/domain/profile';
+import { Pressable, ScrollView, StyleSheet, Switch, TextInput, useColorScheme, View } from 'react-native';
+import { readDemoMode } from '@/demo';
+import { fromIsoDate, toIsoDate, validateProfile, type Sex } from '@/domain/profile';
 import { saveProfile, useProfile } from '@/storage/useProfile';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
+import { formatLongDate } from '@/util/format';
+
+const DEFAULT_PICK = new Date(1990, 0, 1, 12);
+const OLDEST = new Date(1915, 0, 1);
 
 export default function ProfileScreen() {
   const c = useColors();
   const existing = useProfile();
   const [sex, setSex] = useState<Sex>(existing?.sex ?? 'male');
-  const [birthDate, setBirthDate] = useState(existing?.birthDate ?? '');
+  const scheme = useColorScheme();
+  const [birth, setBirth] = useState<Date | null>(existing ? fromIsoDate(existing.birthDate) : null);
+  // The screenshots workflow opens the picker so its rendering is checked too.
+  const [pickerOpen, setPickerOpen] = useState(() => readDemoMode() === 'profile');
   const [height, setHeight] = useState(existing ? String(existing.heightCm) : '');
   const [athlete, setAthlete] = useState(existing?.athlete ?? false);
   const [errors, setErrors] = useState<string[]>([]);
 
   const save = () => {
-    const r = validateProfile({ sex, birthDate, heightCm: height, athlete });
+    const r = validateProfile({ sex, birthDate: birth ? toIsoDate(birth) : '', heightCm: height, athlete });
     if (!r.ok) {
       setErrors(r.errors);
       return;
@@ -52,16 +61,32 @@ export default function ProfileScreen() {
       </View>
 
       <SectionTitle>Birth date</SectionTitle>
-      <TextInput
-        style={input}
-        value={birthDate}
-        onChangeText={setBirthDate}
-        placeholder="YYYY-MM-DD, e.g. 1990-04-23"
-        placeholderTextColor={c.subtext}
-        keyboardType="numbers-and-punctuation"
-        autoCorrect={false}
-        maxLength={10}
-      />
+      <Pressable
+        onPress={() => {
+          setBirth((b) => b ?? DEFAULT_PICK);
+          setPickerOpen((o) => !o);
+        }}
+        accessibilityRole="button"
+        style={[styles.input, styles.dateRow, { borderColor: c.border, backgroundColor: c.background }]}
+      >
+        <ThemedText style={{ fontSize: 17, color: birth ? c.text : c.subtext }}>
+          {birth ? formatLongDate(birth) : 'Choose your birth date'}
+        </ThemedText>
+        <ThemedText style={{ color: c.accent }}>{pickerOpen ? 'Done' : 'Edit'}</ThemedText>
+      </Pressable>
+      {pickerOpen && (
+        <DateTimePicker
+          value={birth ?? DEFAULT_PICK}
+          mode="date"
+          display="spinner"
+          maximumDate={new Date()}
+          minimumDate={OLDEST}
+          themeVariant={scheme === 'dark' ? 'dark' : 'light'}
+          onChange={(_, date) => {
+            if (date) setBirth(date);
+          }}
+        />
+      )}
 
       <SectionTitle>Height (cm)</SectionTitle>
       <TextInput
@@ -100,6 +125,7 @@ const styles = StyleSheet.create({
   segment: { flexDirection: 'row', gap: 10 },
   segmentItem: { flex: 1, alignItems: 'center', paddingVertical: 12, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
   input: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 14, fontSize: 17 },
+  dateRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   athlete: { flexDirection: 'row', alignItems: 'center', gap: 12, marginTop: 8 },
   athleteTitle: { fontSize: 17, fontWeight: '600' },
   athleteText: { fontSize: 13 },

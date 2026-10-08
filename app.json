@@ -21,7 +21,9 @@
         {
           "bluetoothAlwaysPermission": "Open RENPHO connects to your RENPHO scale and tape measure over Bluetooth to read your measurements."
         }
-      ]
+      ],
+      "@react-native-community/datetimepicker",
+      "expo-font"
     ],
     "scheme": "open-renpho",
     "experiments": {

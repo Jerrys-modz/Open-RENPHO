@@ -1,4 +1,4 @@
-import { ageOn, parseProfile, serializeProfile, validateProfile } from '../profile';
+import { ageOn, fromIsoDate, parseProfile, serializeProfile, toIsoDate, validateProfile } from '../profile';
 
 const NOW = new Date(2026, 9, 8); // 8 Oct 2026, local time
 
@@ -44,5 +44,21 @@ describe('serializeProfile / parseProfile', () => {
   it('returns null for garbage', () => {
     expect(parseProfile('nope')).toBeNull();
     expect(parseProfile('{"profile":{"sex":"x"}}')).toBeNull();
+  });
+});
+
+describe('toIsoDate / fromIsoDate', () => {
+  it('round-trips local dates', () => {
+    expect(toIsoDate(new Date(1990, 3, 23))).toBe('1990-04-23');
+    expect(toIsoDate(fromIsoDate('2000-02-29') as Date)).toBe('2000-02-29');
+  });
+  it('does not move the day for a late-evening time', () => {
+    expect(toIsoDate(new Date(1990, 3, 23, 23, 59))).toBe('1990-04-23');
+    expect(toIsoDate(new Date(1990, 3, 23, 0, 1))).toBe('1990-04-23');
+  });
+  it('rejects text that is not a real date', () => {
+    expect(fromIsoDate('1990-02-31')).toBeNull();
+    expect(fromIsoDate('23/04/1990')).toBeNull();
+    expect(fromIsoDate('')).toBeNull();
   });
 });
