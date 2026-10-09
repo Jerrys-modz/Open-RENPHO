@@ -2,7 +2,7 @@ import { useSyncExternalStore } from 'react';
 import type { Measurement } from '@/domain/measurement';
 import { demoMeasurements, readDemoMode } from '@/demo';
 import { loadMeasurements, saveMeasurements } from './fileStore';
-import { appendMeasurements } from './measurements';
+import { appendMeasurements, removeEntry, type Entry } from './measurements';
 
 // One in-memory copy shared by every screen, persisted to disk on every change.
 let cache: Measurement[] | null = null;
@@ -21,6 +21,12 @@ function subscribe(cb: () => void) {
 
 /** The current list, for code outside React (sync). */
 export const getMeasurements = (): readonly Measurement[] => snapshot();
+
+export function deleteEntry(entry: Entry): void {
+  cache = removeEntry(snapshot(), entry);
+  if (!demo) saveMeasurements(cache);
+  listeners.forEach((l) => l());
+}
 
 export function addMeasurements(add: readonly Measurement[]): void {
   cache = appendMeasurements(snapshot(), add);
