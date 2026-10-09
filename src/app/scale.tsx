@@ -7,6 +7,7 @@ import { ScaleConnection } from '@/ble/scale/connection';
 import type { Measurement } from '@/domain/measurement';
 import { DEMO_PROFILE, DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 import { addMeasurements } from '@/storage/useMeasurements';
+import { syncAppleHealth } from '@/sync';
 import { getProfile, useProfile } from '@/storage/useProfile';
 import { useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricRow } from '@/ui/components';
@@ -42,12 +43,14 @@ export default function WeighInScreen() {
     conn.current.start({
       // Without a profile we tell the scale not to calculate body fat.
       profile: p ? toScaleProfile(p) : undefined,
+      userProfile: p,
       onStatus: setStatus,
       onLiveWeight: setLive,
       onWeighIn: (w) => {
         setFlavor(w.flavor);
-        const ms = weighInToMeasurements(w, Date.now(), getProfile());
+        const ms = weighInToMeasurements(w, w.takenAt ?? Date.now(), getProfile());
         addMeasurements(ms);
+        void syncAppleHealth();
         setSaved(ms);
         setStatus('Saved to your history');
       },
@@ -84,8 +87,7 @@ export default function WeighInScreen() {
         <Card>
           <ThemedText style={styles.profileTitle}>Add your profile for body fat and more</ThemedText>
           <ThemedText subtle style={styles.hint}>
-            The scale only measures weight and impedance. Body fat, BMI, water, muscle and bone are calculated from your sex,
-            age and height.
+            The scale reports your weight. Body fat, BMI, water, muscle and bone are calculated from your sex, age and height.
           </ThemedText>
           <Button title="Set up profile" variant="secondary" onPress={() => router.push('/profile')} style={styles.profileButton} />
         </Card>
@@ -114,6 +116,11 @@ export default function WeighInScreen() {
       <ThemedText subtle style={styles.hint}>
         Tap the button, then step on the scale barefoot. It wakes up when you stand on it.
       </ThemedText>
+      {flavor === 'beurer' && (
+        <ThemedText subtle style={styles.hint}>
+          Body fat, water, BMR and impedance come from your Beurer scale. Bone mass and protein are estimated.
+        </ThemedText>
+      )}
       {flavor === 'broadcast' && (
         <ThemedText subtle style={styles.hint}>
           This scale model only broadcasts your weight and sends no impedance, so body fat and the numbers derived from it are

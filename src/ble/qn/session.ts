@@ -8,6 +8,7 @@
  *  - basic (HVIN ESCS20MN): scale streams weight + raw impedance; we compute
  *    body fat ourselves.
  */
+import type { MeasurementType } from '@/domain/measurement';
 import {
   BASIC_STATUS,
   BOOTSTRAP_PROFILE,
@@ -24,7 +25,7 @@ import {
   type ScaleProfile,
 } from './protocol';
 
-export type Flavor = 'extended' | 'basic' | 'broadcast';
+export type Flavor = 'extended' | 'basic' | 'broadcast' | 'beurer';
 
 export interface WeighIn {
   flavor: Flavor;
@@ -33,6 +34,10 @@ export interface WeighIn {
   bodyFat: number | null;
   resistance1: number | null;
   resistance2: number | null;
+  /** Unix ms from the scale's own clock, when it has one (stored readings arrive late). */
+  takenAt?: number;
+  /** Other metrics the scale computed itself; these win over our estimates. */
+  scaleMetrics?: Partial<Record<MeasurementType, number>>;
 }
 
 export interface QnSessionOptions {

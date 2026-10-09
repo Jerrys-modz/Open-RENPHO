@@ -5,6 +5,7 @@ import { heightMeters, sexIndex } from './profile';
 import type { WeighIn } from './session';
 
 export const QN_SOURCE = 'qn-scale';
+export const BEURER_SOURCE = 'beurer-bf720';
 
 /**
  * Impedance used when the scale reports none. The open-source project this is ported from found
@@ -22,11 +23,12 @@ export const SYNTHETIC_IMPEDANCE_OHMS = 500;
  * the RENPHO app's own numbers.
  */
 export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: UserProfile | null): Measurement[] {
+  const source = w.flavor === 'beurer' ? BEURER_SOURCE : QN_SOURCE;
   const add = (type: Measurement['type'], value: number): Measurement => ({
     type,
     value,
     takenAt,
-    source: QN_SOURCE,
+    source,
   });
   const out: Measurement[] = [add('weight', w.weightKg)];
 
@@ -55,18 +57,24 @@ export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: Use
 
   if (bodyFat !== null) {
     out.push(add('body_fat', bodyFat));
+    // Estimates from body fat; anything the scale measured itself replaces them.
+    const metrics: Partial<Record<Measurement['type'], number>> = {};
     if (profile) {
       const d = deriveBodyMetrics(w.weightKg, heightMeters(profile), sexIndex(profile), bodyFat);
-      out.push(
-        add('bmi', d.bmi),
-        add('body_water', d.bodyWater),
-        add('skeletal_muscle', d.skeletalMuscle),
-        add('muscle_mass', d.muscleMass),
-        add('fat_free_mass', d.fatFreeMass),
-        add('bone_mass', d.boneMass),
-        add('protein', d.protein),
-        add('bmr', d.bmr),
-      );
+      Object.assign(metrics, {
+        bmi: d.bmi,
+        body_water: d.bodyWater,
+        skeletal_muscle: d.skeletalMuscle,
+        muscle_mass: d.muscleMass,
+        fat_free_mass: d.fatFreeMass,
+        bone_mass: d.boneMass,
+        protein: d.protein,
+        bmr: d.bmr,
+      });
+    }
+    Object.assign(metrics, w.scaleMetrics);
+    for (const [type, value] of Object.entries(metrics) as [Measurement['type'], number][]) {
+      out.push(add(type, value));
     }
   }
   if (r !== null) out.push(add('impedance', r));

@@ -16,6 +16,11 @@ const OWN_IDLE = bytes('aabbed6739534985fcffc76affffff0400' + '0000004b05037312'
 const OWN_BLIP = bytes('aabbed6739534985d6ffc76affffff04' + '0060044b05032812'); // brief 11.20 kg touch
 const OWN_FINAL = bytes('aabbed67395349859100c86affffff25' + '00762a4b05030313'); // standing on it; display showed 239.6 lb
 
+// Capture-screen reports from the owner's phone (2026-10-08): wake/tare event, barefoot final, socks final.
+const OWN_TARE_EVENT = bytes('aabbed6739534985b60fc86a19239b050000004b05038d13'); // status 05, bytes 12-14 differ
+const OWN_BAREFOOT_FINAL = bytes('aabbed6739534985e40fc86affffff25009e2a4b0503ae13'); // 109.10 kg
+const OWN_SOCKS_FINAL = bytes('aabbed67395349851010c86affffff25109e2a4b0503db13'); // 109.10 kg, byte 16 = 0x10
+
 /** Prefixes the company ID the way ble-plx returns manufacturer data. */
 const withCompany = (payload: Uint8Array) => Uint8Array.from([0xff, 0xff, ...payload]);
 
@@ -72,6 +77,20 @@ describe('real frames from the owner\'s scale', () => {
     const f = parseBroadcast(COMPANY_ID, OWN_FINAL);
     expect(f).toMatchObject({ weightKg: 108.7, final: true, displayUnit: 'lb', status: 0x25 });
     expect(f!.weightKg * 2.2046226).toBeCloseTo(239.6, 1);
+  });
+
+  it('the wake/tare event frame (status 05, weight 0) is not a reading', () => {
+    expect(parseBroadcast(COMPANY_ID, OWN_TARE_EVENT)).toMatchObject({ weightKg: 0, final: false, status: 0x05 });
+  });
+
+  it('barefoot and socks give the same weight; byte 16 (0x10 with socks) does not change the decode', () => {
+    const bare = parseBroadcast(COMPANY_ID, OWN_BAREFOOT_FINAL);
+    const socks = parseBroadcast(COMPANY_ID, OWN_SOCKS_FINAL);
+    expect(bare).toMatchObject({ weightKg: 109.1, final: true });
+    expect(socks).toMatchObject({ weightKg: 109.1, final: true });
+    // The only differing byte between the two final frames' fixed part is index 16 (plus the clock and counter).
+    expect(OWN_BAREFOOT_FINAL[16]).toBe(0x00);
+    expect(OWN_SOCKS_FINAL[16]).toBe(0x10);
   });
 
   it('the session produces exactly one reading from idle then final frames', () => {

@@ -4,6 +4,7 @@ import { TapeConnection } from '@/ble/tape/transport';
 import type { Measurement } from '@/domain/measurement';
 import { DEMO_TAPE, readDemoMode } from '@/demo';
 import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
+import { syncAppleHealth } from '@/sync';
 import { useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, metricById } from '@/ui/metrics';
@@ -57,6 +58,7 @@ export default function TapeScreen() {
           site: siteRef.current,
         };
         addMeasurements([m]);
+        void syncAppleHealth();
       },
       onError: (m) => {
         setError(m);
