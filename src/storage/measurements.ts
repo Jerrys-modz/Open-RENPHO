@@ -36,7 +36,7 @@ export function latestWithDelta(list: readonly Measurement[], key: SeriesKey): L
   return { point, delta: s.length > 1 ? point.v - s[s.length - 2].v : null };
 }
 
-const idOf = (m: Measurement) => `${m.source}|${m.type}|${m.site ?? ''}|${m.takenAt}`;
+export const idOf = (m: Measurement) => `${m.source}|${m.type}|${m.site ?? ''}|${m.takenAt}`;
 
 /** Adds measurements, ignoring any already present (same source, type, site and time). */
 export function appendMeasurements(
@@ -52,6 +52,33 @@ export function appendMeasurements(
     out.push(m);
   }
   return out;
+}
+
+/** Everything that was saved in one go: a weigh-in (all its metrics) or a single tape reading. */
+export interface Entry {
+  id: string;
+  kind: 'weigh-in' | 'tape';
+  takenAt: number;
+  measurements: Measurement[];
+}
+
+/** Newest first. Scale metrics sharing a source and timestamp are one weigh-in; each tape reading stands alone. */
+export function groupEntries(list: readonly Measurement[]): Entry[] {
+  const byId = new Map<string, Entry>();
+  for (const m of list) {
+    const tape = m.type === 'circumference';
+    const id = tape ? idOf(m) : `${m.source}|${m.takenAt}`;
+    const e = byId.get(id);
+    if (e) e.measurements.push(m);
+    else byId.set(id, { id, kind: tape ? 'tape' : 'weigh-in', takenAt: m.takenAt, measurements: [m] });
+  }
+  return [...byId.values()].sort((a, b) => b.takenAt - a.takenAt);
+}
+
+/** The list without the given entry's measurements. */
+export function removeEntry(list: readonly Measurement[], entry: Entry): Measurement[] {
+  const gone = new Set(entry.measurements.map(idOf));
+  return list.filter((m) => !gone.has(idOf(m)));
 }
 
 export function serialize(list: readonly Measurement[]): string {
