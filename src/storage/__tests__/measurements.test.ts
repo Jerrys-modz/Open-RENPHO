@@ -1,5 +1,5 @@
 import type { Measurement } from '@/domain/measurement';
-import { appendMeasurements, latestWithDelta, parse, seriesFor, serialize } from '../measurements';
+import { appendMeasurements, groupEntries, latestWithDelta, parse, removeEntry, seriesFor, serialize } from '../measurements';
 
 const m = (type: Measurement['type'], value: number, takenAt: number, site?: string): Measurement => ({
   type,
@@ -63,5 +63,40 @@ describe('serialize / parse', () => {
     expect(parse(text)).toHaveLength(1);
     expect(parse('not json')).toEqual([]);
     expect(parse('{}')).toEqual([]);
+  });
+});
+
+describe('groupEntries and removeEntry', () => {
+  const mk = (type: Measurement['type'], takenAt: number, extra: Partial<Measurement> = {}): Measurement => ({
+    type,
+    value: 1,
+    takenAt,
+    source: 'qn-scale',
+    ...extra,
+  });
+  const list = [
+    mk('weight', 100),
+    mk('body_fat', 100),
+    mk('weight', 200),
+    mk('circumference', 150, { source: 'rf-bmf01', site: 'waist' }),
+    mk('circumference', 150, { source: 'rf-bmf01', site: 'hips' }),
+  ];
+
+  it('groups a weigh-in and keeps tape readings separate, newest first', () => {
+    const entries = groupEntries(list);
+    expect(entries.map((e) => [e.kind, e.measurements.length])).toEqual([
+      ['weigh-in', 1],
+      ['tape', 1],
+      ['tape', 1],
+      ['weigh-in', 2],
+    ]);
+    expect(entries[0].takenAt).toBe(200);
+  });
+
+  it('removes only the chosen weigh-in', () => {
+    const entry = groupEntries(list).find((e) => e.takenAt === 100)!;
+    const rest = removeEntry(list, entry);
+    expect(rest).toHaveLength(3);
+    expect(rest.some((m) => m.takenAt === 100)).toBe(false);
   });
 });

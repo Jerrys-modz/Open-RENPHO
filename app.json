@@ -31,7 +31,8 @@
           "NSHealthUpdateUsageDescription": "Open RENPHO saves your weight, body fat, lean mass, BMI and waist measurements to Apple Health.",
           "background": false
         }
-      ]
+      ],
+      "expo-secure-store"
     ],
     "scheme": "open-renpho",
     "experiments": {

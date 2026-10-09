@@ -7,7 +7,7 @@ import { ScaleConnection } from '@/ble/scale/connection';
 import type { Measurement } from '@/domain/measurement';
 import { DEMO_PROFILE, DEMO_WEIGH_IN, readDemoMode } from '@/demo';
 import { addMeasurements } from '@/storage/useMeasurements';
-import { syncAppleHealth } from '@/sync';
+import { syncAll } from '@/sync';
 import { getProfile, useProfile } from '@/storage/useProfile';
 import { useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricRow } from '@/ui/components';
@@ -50,7 +50,7 @@ export default function WeighInScreen() {
         setFlavor(w.flavor);
         const ms = weighInToMeasurements(w, w.takenAt ?? Date.now(), getProfile());
         addMeasurements(ms);
-        void syncAppleHealth();
+        void syncAll();
         setSaved(ms);
         setStatus('Saved to your history');
       },

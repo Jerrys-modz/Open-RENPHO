@@ -131,6 +131,7 @@ export default function Overview() {
         <Button title="Weigh in" onPress={() => router.push('/scale')} />
         <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
       </View>
+      {hasData && <Button title="History" variant="secondary" onPress={() => router.push('/history')} style={styles.historyButton} />}
     </ScrollView>
   );
 }
@@ -156,4 +157,5 @@ const styles = StyleSheet.create({
   profileTitle: { fontSize: 17, fontWeight: '600' },
   profileText: { fontSize: 14 },
   profileButton: { flex: 0 },
+  historyButton: { flex: 0 },
 });
