@@ -19,6 +19,9 @@ function subscribe(cb: () => void) {
   return () => listeners.delete(cb);
 }
 
+/** The current list, for code outside React (sync). */
+export const getMeasurements = (): readonly Measurement[] => snapshot();
+
 export function addMeasurements(add: readonly Measurement[]): void {
   cache = appendMeasurements(snapshot(), add);
   if (!demo) saveMeasurements(cache); // demo mode never writes anything

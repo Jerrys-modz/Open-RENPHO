@@ -92,9 +92,11 @@ export function Button({
   onPress,
   variant = 'primary',
   style,
+  disabled = false,
 }: {
   title: string;
   onPress: () => void;
+  disabled?: boolean;
   variant?: 'primary' | 'secondary';
   style?: StyleProp<ViewStyle>;
 }) {
@@ -104,9 +106,10 @@ export function Button({
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
+      disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        { backgroundColor: primary ? c.accent : c.card, borderColor: c.border, opacity: pressed ? 0.8 : 1 },
+        { backgroundColor: primary ? c.accent : c.card, borderColor: c.border, opacity: disabled ? 0.5 : pressed ? 0.8 : 1 },
         primary ? null : styles.buttonBordered,
         style,
       ]}

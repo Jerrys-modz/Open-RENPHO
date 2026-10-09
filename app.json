@@ -23,7 +23,15 @@
         }
       ],
       "@react-native-community/datetimepicker",
-      "expo-font"
+      "expo-font",
+      [
+        "@kingstinct/react-native-healthkit",
+        {
+          "NSHealthShareUsageDescription": "Open RENPHO only saves measurements to Apple Health. It does not read your health data.",
+          "NSHealthUpdateUsageDescription": "Open RENPHO saves your weight, body fat, lean mass, BMI and waist measurements to Apple Health.",
+          "background": false
+        }
+      ]
     ],
     "scheme": "open-renpho",
     "experiments": {

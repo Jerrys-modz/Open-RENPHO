@@ -74,3 +74,12 @@ show up without a new build. The first install needs your device registered with
 - HealthKit is not in the app yet. When it is added, the App ID needs the HealthKit capability
   and the provisioning profile must be regenerated (EAS does this when it can sign in to
   Apple; run `eas credentials` interactively if a non-interactive build can't).
+
+## Apple Health
+
+The app uses HealthKit (write only). The config plugin adds the `com.apple.developer.healthkit`
+entitlement, and EAS Build enables the HealthKit capability on the App ID when it signs the build, so no
+manual Apple Developer step is normally needed. **HealthKit needs a native rebuild**: an existing
+TestFlight or development build will not have it, so run a new EAS build before testing Sync. If the build
+fails with a provisioning error about HealthKit, enable HealthKit on the App ID in the Apple Developer
+portal and rebuild.
