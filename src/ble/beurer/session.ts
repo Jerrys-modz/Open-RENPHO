@@ -45,6 +45,13 @@ export interface BeurerSessionOptions {
   onError: (message: string) => void;
   /** The stored code no longer works; the caller should forget it. */
   onPairingRejected?: () => void;
+  /**
+   * Take readings the scale files under any user slot, not just ours. The BF720 can assign a
+   * weigh-in to another registered slot (e.g. the Beurer app's) when it recognises the weight.
+   */
+  acceptAnyUser?: () => boolean;
+  /** One line per indication, for the on-screen debug log. */
+  onDebug?: (line: string) => void;
   /** How long to wait for the Body Composition half of a reading. */
   pairTimeoutMs?: number;
   setTimer?: (fn: () => void, ms: number) => unknown;
@@ -79,6 +86,7 @@ export class BeurerSession {
   }
 
   handleControlPoint(data: Uint8Array): void {
+    this.opts.onDebug?.(`control point ${hex(data)}`);
     const r = parseUcpResponse(data);
     if (!r) return;
 
@@ -109,7 +117,17 @@ export class BeurerSession {
 
   handleWeight(data: Uint8Array): void {
     const w = parseWeightMeasurement(data);
-    if (!w || !this.isOurs(w.userIndex)) return;
+    this.opts.onDebug?.(
+      w ? `weight ${w.weightKg} kg, scale user ${w.userIndex ?? 'none'}` : `weight frame not understood: ${hex(data)}`,
+    );
+    if (!w) return;
+    if (!this.isOurs(w.userIndex)) {
+      this.opts.onStatus(
+        `The scale filed this weigh-in under user ${w.userIndex}, not you (user ${this.pairing?.userIndex}). ` +
+          'Turn on "Accept any scale user" in Profile to take it.',
+      );
+      return;
+    }
     // A new weight while another is still waiting for its body half: ship the old one on its own.
     if (this.pendingWeight) this.flush();
     this.pendingWeight = w;
@@ -122,6 +140,11 @@ export class BeurerSession {
 
   handleBodyComposition(data: Uint8Array): void {
     const b = parseBodyCompositionMeasurement(data);
+    this.opts.onDebug?.(
+      b
+        ? `body fat ${b.bodyFatPercent ?? '-'}%, impedance ${b.impedanceOhms ?? '-'} ohm, scale user ${b.userIndex ?? 'none'}`
+        : `body frame not understood: ${hex(data)}`,
+    );
     if (!b || !this.isOurs(b.userIndex)) return;
     this.pendingBody = b;
     if (this.pendingWeight) this.flush();
@@ -140,7 +163,12 @@ export class BeurerSession {
   }
 
   private isOurs(userIndex: number | null): boolean {
-    return userIndex === null || this.pairing === null || userIndex === this.pairing.userIndex;
+    return (
+      userIndex === null ||
+      this.pairing === null ||
+      userIndex === this.pairing.userIndex ||
+      this.opts.acceptAnyUser?.() === true
+    );
   }
 
   private armTimer(): void {
@@ -187,5 +215,6 @@ export class BeurerSession {
   }
 }
 
+const hex = (b: Uint8Array) => Array.from(b, (x) => x.toString(16).padStart(2, '0')).join(' ');
 const round1 = (v: number) => Math.round(v * 10) / 10;
 const round2 = (v: number) => Math.round(v * 100) / 100;

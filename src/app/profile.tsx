@@ -6,7 +6,7 @@ import { readDemoMode } from '@/demo';
 import { fromIsoDate, toIsoDate, validateProfile, type Sex } from '@/domain/profile';
 import { clearBeurerPairing, loadBeurerPairing } from '@/storage/beurerPairing';
 import { saveProfile, useProfile } from '@/storage/useProfile';
-import { setUnits, useUnits } from '@/storage/useSettings';
+import { setBeurerAnyUser, setUnits, useBeurerAnyUser, useUnits } from '@/storage/useSettings';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
@@ -28,6 +28,7 @@ export default function ProfileScreen() {
   const [height, setHeight] = useState(existing ? heightToInput(existing.heightCm, units) : '');
   const [athlete, setAthlete] = useState(existing?.athlete ?? false);
   const [errors, setErrors] = useState<string[]>([]);
+  const anyUser = useBeurerAnyUser();
   const [beurerSlot, setBeurerSlot] = useState(() => loadBeurerPairing()?.userIndex ?? null);
 
   const save = () => {
@@ -161,6 +162,17 @@ export default function ProfileScreen() {
             }}
             style={styles.resetButton}
           />
+        </Card>
+      )}
+      {beurerSlot !== null && (
+        <Card style={styles.athlete}>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={styles.athleteTitle}>Accept any scale user</ThemedText>
+            <ThemedText subtle style={styles.athleteText}>
+              Take weigh-ins the Beurer scale files under another user, such as the one from the Beurer app. Leave off if others use the scale.
+            </ThemedText>
+          </View>
+          <Switch value={anyUser} onValueChange={setBeurerAnyUser} />
         </Card>
       )}
       <Button title="Scale capture (debug)" variant="secondary" onPress={() => router.push('/capture')} style={styles.button} />

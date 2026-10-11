@@ -8,7 +8,9 @@ const WEIGHT = '0ef446ea070816103301023a01a406'; // user 2, 90.82 kg
 const WEIGHT_OTHER_USER = '0ef446ea070816103301033a01a406'; // user 3
 const BODY = '9803a6017a1a30015826e01c1211';
 
-function setup(pairing: BeurerPairing | null = null) {
+function setup(pairing: BeurerPairing | null = null, acceptAny = false) {
+  const statuses: string[] = [];
+  const debug: string[] = [];
   const writes: string[] = [];
   const weighIns: WeighIn[] = [];
   const paired: BeurerPairing[] = [];
@@ -22,11 +24,13 @@ function setup(pairing: BeurerPairing | null = null) {
     onPaired: (p) => paired.push(p),
     onConsented: (p) => consented.push(p),
     onWeighIn: (w) => weighIns.push(w),
-    onStatus: () => {},
+    onStatus: (m) => void statuses.push(m),
+    acceptAnyUser: () => acceptAny,
+    onDebug: (l) => void debug.push(l),
     onError: (m) => errors.push(m),
     onPairingRejected: () => void rejected++,
   });
-  return { session, writes, weighIns, paired, consented, errors, rejected: () => rejected };
+  return { session, writes, weighIns, paired, consented, errors, statuses, debug, rejected: () => rejected };
 }
 
 describe('BeurerSession pairing', () => {
@@ -121,6 +125,31 @@ describe('BeurerSession readings', () => {
     } finally {
       jest.useRealTimers();
     }
+  });
+
+  it('tells the user when the scale files a reading under another user', () => {
+    const { session, weighIns, statuses, debug } = setup(paired);
+    session.handleWeight(bytes(WEIGHT_OTHER_USER));
+    expect(weighIns).toHaveLength(0);
+    expect(statuses.at(-1)).toMatch(/user 3, not you \(user 2\)/);
+    expect(debug[0]).toMatch(/scale user 3/);
+  });
+
+  it('takes another user\'s reading when asked to accept any user', () => {
+    const { session, weighIns } = setup(paired, true);
+    session.handleWeight(bytes(WEIGHT_OTHER_USER));
+    session.handleBodyComposition(bytes(BODY));
+    expect(weighIns).toHaveLength(1);
+    expect(weighIns[0].bodyFat).toBe(42.2);
+    session.destroy();
+  });
+
+  it('logs control point and body frames for the debug view', () => {
+    const { session, debug } = setup(paired);
+    session.handleControlPoint(bytes('200201'));
+    session.handleBodyComposition(bytes(BODY));
+    expect(debug).toEqual(['control point 20 02 01', 'body fat 42.2%, impedance 437 ohm, scale user none']);
+    session.destroy();
   });
 
   it('keeps two stored readings separate', () => {
