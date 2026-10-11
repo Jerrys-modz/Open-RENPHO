@@ -11,7 +11,7 @@ describe('weighInToMeasurements', () => {
       { flavor: 'extended', weightKg: 74.95, bodyFat: 21, resistance1: 505, resistance2: 503 },
       123,
     );
-    expect(types(out)).toEqual(['weight', 'body_fat', 'impedance']);
+    expect(types(out)).toEqual(['weight', 'body_fat', 'fat_mass', 'impedance']);
     expect(new Set(out.map((m) => m.takenAt))).toEqual(new Set([123]));
   });
 
@@ -29,19 +29,30 @@ describe('weighInToMeasurements', () => {
       Date.UTC(2026, 9, 7),
       PROFILE,
     );
-    expect(types(out)).toEqual([
-      'weight',
-      'body_fat',
-      'bmi',
-      'body_water',
-      'skeletal_muscle',
-      'muscle_mass',
-      'fat_free_mass',
-      'bone_mass',
-      'protein',
-      'bmr',
-      'impedance',
-    ]);
+    expect([...types(out)].sort()).toEqual(
+      [
+        'weight',
+        'body_fat',
+        'fat_mass',
+        'muscle_percent',
+        'skeletal_muscle_mass',
+        'bone_percent',
+        'body_water_mass',
+        'protein_mass',
+        'bmi',
+        'body_water',
+        'skeletal_muscle',
+        'muscle_mass',
+        'fat_free_mass',
+        'bone_mass',
+        'protein',
+        'bmr',
+        'impedance',
+      ].sort(),
+    );
+    expect(get(out, 'fat_mass')).toBeCloseTo(15.74, 2); // 74.95 kg x 21%
+    expect(get(out, 'muscle_percent')).toBeCloseTo(((get(out, 'muscle_mass') ?? 0) / 74.95) * 100, 1);
+    expect(get(out, 'body_water_mass')).toBeCloseTo(((get(out, 'body_water') ?? 0) / 100) * 74.95, 1);
     expect(get(out, 'body_fat')).toBe(21);
     expect(get(out, 'bmi')).toBeCloseTo(25.9, 1); // 74.95 / 1.70^2
     expect(get(out, 'fat_free_mass')).toBeCloseTo(59.21, 1);

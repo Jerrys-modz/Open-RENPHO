@@ -4,9 +4,10 @@ import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, Switch, TextInput, useColorScheme, View } from 'react-native';
 import { readDemoMode } from '@/demo';
 import { fromIsoDate, toIsoDate, validateProfile, type Sex } from '@/domain/profile';
-import { clearBeurerPairing, loadBeurerPairing } from '@/storage/beurerPairing';
+import { parseSlotLink } from '@/ble/beurer/protocol';
+import { clearBeurerPairing, loadBeurerPairing, saveBeurerPairing } from '@/storage/beurerPairing';
 import { saveProfile, useProfile } from '@/storage/useProfile';
-import { setUnits, useUnits } from '@/storage/useSettings';
+import { setBeurerAnyUser, setUnits, useBeurerAnyUser, useUnits } from '@/storage/useSettings';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
@@ -28,7 +29,12 @@ export default function ProfileScreen() {
   const [height, setHeight] = useState(existing ? heightToInput(existing.heightCm, units) : '');
   const [athlete, setAthlete] = useState(existing?.athlete ?? false);
   const [errors, setErrors] = useState<string[]>([]);
-  const [beurerSlot, setBeurerSlot] = useState(() => loadBeurerPairing()?.userIndex ?? null);
+  const anyUser = useBeurerAnyUser();
+  const [pairing, setPairing] = useState(() => loadBeurerPairing());
+  const [linkSlot, setLinkSlot] = useState('');
+  const [linkPin, setLinkPin] = useState('');
+  const [linkError, setLinkError] = useState<string | null>(null);
+  const beurerSlot = pairing?.userIndex ?? null;
 
   const save = () => {
     const r = validateProfile({ sex, birthDate: birth ? toIsoDate(birth) : '', heightCm: parseHeightToCm(height, units), athlete });
@@ -144,23 +150,80 @@ export default function ProfileScreen() {
       ))}
 
       <Button title="Save profile" onPress={save} style={styles.button} />
-      {beurerSlot !== null && (
+      <SectionTitle>Beurer scale user</SectionTitle>
+      {pairing && (
         <Card style={styles.athlete}>
           <View style={{ flex: 1 }}>
-            <ThemedText style={styles.athleteTitle}>Beurer scale: user {beurerSlot}</ThemedText>
+            <ThemedText style={styles.athleteTitle}>
+              {pairing.linked ? `Linked to user ${pairing.userIndex}` : `Registered as user ${pairing.userIndex}`}
+            </ThemedText>
             <ThemedText subtle style={styles.athleteText}>
-              This phone holds user slot {beurerSlot} on your scale. Resetting forgets it here but does not free the slot.
+              {pairing.linked
+                ? 'Weigh-ins and stored history for this user are read from the scale.'
+                : 'This phone holds this slot on your scale. Resetting forgets it here but does not free the slot.'}
             </ThemedText>
           </View>
           <Button
-            title="Reset"
+            title={pairing.linked ? 'Unlink' : 'Reset'}
             variant="secondary"
             onPress={() => {
               clearBeurerPairing();
-              setBeurerSlot(null);
+              setPairing(null);
             }}
             style={styles.resetButton}
           />
+        </Card>
+      )}
+      <ThemedText subtle style={styles.athleteText}>
+        Already use the Beurer app? Enter the user number and PIN from the app to read that user&apos;s weigh-ins and the
+        history stored on the scale, instead of registering a new user.
+      </ThemedText>
+      <View style={styles.linkRow}>
+        <TextInput
+          style={[...input, styles.linkInput]}
+          value={linkSlot}
+          onChangeText={setLinkSlot}
+          placeholder="User (1-8)"
+          placeholderTextColor={c.subtext}
+          keyboardType="number-pad"
+          maxLength={1}
+        />
+        <TextInput
+          style={[...input, styles.linkInput]}
+          value={linkPin}
+          onChangeText={setLinkPin}
+          placeholder="PIN"
+          placeholderTextColor={c.subtext}
+          keyboardType="number-pad"
+          secureTextEntry
+          maxLength={4}
+        />
+        <Button
+          title="Link"
+          variant="secondary"
+          onPress={() => {
+            const r = parseSlotLink(linkSlot, linkPin);
+            if (!r.ok) return setLinkError(r.error);
+            const p = { userIndex: r.userIndex, consentCode: r.consentCode, linked: true };
+            saveBeurerPairing(p);
+            setPairing(p);
+            setLinkSlot('');
+            setLinkPin('');
+            setLinkError(null);
+          }}
+          style={styles.resetButton}
+        />
+      </View>
+      {linkError && <ThemedText style={{ color: c.danger }}>{linkError}</ThemedText>}
+      {beurerSlot !== null && (
+        <Card style={styles.athlete}>
+          <View style={{ flex: 1 }}>
+            <ThemedText style={styles.athleteTitle}>Accept any scale user</ThemedText>
+            <ThemedText subtle style={styles.athleteText}>
+              Take weigh-ins the Beurer scale files under another user, such as the one from the Beurer app. Leave off if others use the scale.
+            </ThemedText>
+          </View>
+          <Switch value={anyUser} onValueChange={setBeurerAnyUser} />
         </Card>
       )}
       <Button title="Scale capture (debug)" variant="secondary" onPress={() => router.push('/capture')} style={styles.button} />
@@ -182,4 +245,6 @@ const styles = StyleSheet.create({
   athleteText: { fontSize: 13 },
   button: { flex: 0, marginTop: 8 },
   resetButton: { flex: 0, paddingHorizontal: 16 },
+  linkRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
+  linkInput: { flex: 1 },
 });

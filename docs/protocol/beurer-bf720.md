@@ -56,3 +56,19 @@ estimates from body fat, as with the RENPHO scales.
   scale also has a proprietary profile record store at `0xFFFF` that we do not use).
 - Exact behaviour when the Beurer app already holds slots.
 - How the consent flow behaves on iOS when bonding is interrupted.
+
+## Linking an existing scale user
+
+The consent code (the "PIN" in the Beurer app and in ble-scale-sync's `beurer_pin`) belongs to a user slot.
+Typing a slot number and PIN taken from the Beurer app (Profile > "Beurer scale user") makes us consent as
+that user, so the scale delivers that user's live weigh-ins and the history it stored for them. A linked slot
+is never forgotten automatically: if the scale refuses the PIN we say so and keep it, because clearing it
+would make the next run register a new slot and use one of the 8. Whether the Beurer app's PIN is the same
+value as the protocol consent code is **unverified**.
+
+## Stats stored
+
+Sent by the scale: body fat, BMR, muscle %, soft lean mass, body water mass, impedance (plus BMI from the weight
+frame). Derived for every scale from body fat (and checked against a RENPHO report): body fat mass, muscle
+mass and %, skeletal muscle %, skeletal muscle mass, bone mass and %, body water % and mass, protein % and
+mass, fat-free mass.

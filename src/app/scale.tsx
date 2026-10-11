@@ -29,6 +29,7 @@ export default function WeighInScreen() {
   );
   const [flavor, setFlavor] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [log, setLog] = useState<string[]>([]);
 
   useEffect(() => () => conn.current?.destroy(), []);
 
@@ -39,6 +40,7 @@ export default function WeighInScreen() {
     setFlavor(null);
     setLive(null);
     setError(null);
+    setLog([]);
     const p = getProfile();
     conn.current.start({
       // Without a profile we tell the scale not to calculate body fat.
@@ -46,6 +48,7 @@ export default function WeighInScreen() {
       userProfile: p,
       onStatus: setStatus,
       onLiveWeight: setLive,
+      onDebug: (line) => setLog((l) => [...l, line].slice(-6)),
       onWeighIn: (w) => {
         setFlavor(w.flavor);
         const ms = weighInToMeasurements(w, w.takenAt ?? Date.now(), getProfile());
@@ -116,6 +119,18 @@ export default function WeighInScreen() {
       <ThemedText subtle style={styles.hint}>
         Tap the button, then step on the scale barefoot. It wakes up when you stand on it.
       </ThemedText>
+      {log.length > 0 && (
+        <Card>
+          <ThemedText subtle style={styles.hint}>
+            What the scale sent
+          </ThemedText>
+          {log.map((l, i) => (
+            <ThemedText key={`${i}-${l}`} subtle style={styles.logLine}>
+              {l}
+            </ThemedText>
+          ))}
+        </Card>
+      )}
       {flavor === 'beurer' && (
         <ThemedText subtle style={styles.hint}>
           Body fat, water, BMR and impedance come from your Beurer scale. Bone mass and protein are estimated.
@@ -147,4 +162,5 @@ const styles = StyleSheet.create({
   detail: { flexDirection: 'row', justifyContent: 'space-between', borderTopWidth: StyleSheet.hairlineWidth, paddingTop: 12 },
   button: { flex: 0 },
   hint: { textAlign: 'center', fontSize: 13 },
+  logLine: { fontSize: 12, fontFamily: 'Menlo' },
 });

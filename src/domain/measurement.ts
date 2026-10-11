@@ -12,6 +12,13 @@ export type MeasurementType =
   | 'fat_free_mass' // kg
   | 'protein' // %
   | 'bmi'
+  | 'fat_mass' // kg
+  | 'muscle_percent' // %
+  | 'skeletal_muscle_mass' // kg
+  | 'bone_percent' // %
+  | 'body_water_mass' // kg
+  | 'protein_mass' // kg
+  | 'soft_lean_mass' // kg; only scales that report it
   | 'bmr' // kcal/day
   | 'impedance' // ohms
   | 'circumference'; // cm; see `site`
