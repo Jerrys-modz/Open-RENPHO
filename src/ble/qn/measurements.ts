@@ -57,11 +57,18 @@ export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: Use
 
   if (bodyFat !== null) {
     out.push(add('body_fat', bodyFat));
+    const kg = (pct: number) => Math.round((w.weightKg * pct) / 100 * 100) / 100;
     // Estimates from body fat; anything the scale measured itself replaces them.
     const metrics: Partial<Record<Measurement['type'], number>> = {};
     if (profile) {
       const d = deriveBodyMetrics(w.weightKg, heightMeters(profile), sexIndex(profile), bodyFat);
       Object.assign(metrics, {
+        fat_mass: kg(bodyFat),
+        muscle_percent: round1((d.muscleMass / w.weightKg) * 100),
+        skeletal_muscle_mass: kg(d.skeletalMuscle),
+        bone_percent: round1((d.boneMass / w.weightKg) * 100),
+        body_water_mass: kg(d.bodyWater),
+        protein_mass: kg(d.protein),
         bmi: d.bmi,
         body_water: d.bodyWater,
         skeletal_muscle: d.skeletalMuscle,
@@ -72,6 +79,7 @@ export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: Use
         bmr: d.bmr,
       });
     }
+    metrics.fat_mass ??= kg(bodyFat);
     Object.assign(metrics, w.scaleMetrics);
     for (const [type, value] of Object.entries(metrics) as [Measurement['type'], number][]) {
       out.push(add(type, value));
@@ -80,3 +88,5 @@ export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: Use
   if (r !== null) out.push(add('impedance', r));
   return out;
 }
+
+const round1 = (v: number) => Math.round(v * 10) / 10;

@@ -28,6 +28,8 @@ import {
 export interface BeurerPairing {
   userIndex: number;
   consentCode: number;
+  /** An existing scale user (e.g. the Beurer app's) the user typed in, not a slot we registered. */
+  linked?: boolean;
 }
 
 export interface BeurerSessionOptions {
@@ -108,9 +110,15 @@ export class BeurerSession {
         this.opts.onConsented(this.pairing);
         return;
       }
-      if (r.result === UCP_RESULT.USER_NOT_AUTHORIZED || r.result === UCP_RESULT.INVALID_PARAMETER) {
-        this.opts.onPairingRejected?.();
+      const refused = r.result === UCP_RESULT.USER_NOT_AUTHORIZED || r.result === UCP_RESULT.INVALID_PARAMETER;
+      if (refused && this.pairing?.linked) {
+        // Keep it: forgetting would make the next run register a new slot and use one up.
+        this.opts.onError(
+          `The scale did not accept the PIN for user ${this.pairing.userIndex}. Check the user number and PIN in the Beurer app, then link it again in Profile.`,
+        );
+        return;
       }
+      if (refused) this.opts.onPairingRejected?.();
       this.opts.onError(describeUcpFailure(r.requestOpcode, r.result));
     }
   }
@@ -197,7 +205,12 @@ export class BeurerSession {
     if (w?.bmi != null) scaleMetrics.bmi = w.bmi;
     if (b) {
       if (b.bmrKcal !== null) scaleMetrics.bmr = b.bmrKcal;
-      if (b.musclePercent !== null) scaleMetrics.muscle_mass = round2((weightKg * b.musclePercent) / 100);
+      if (b.musclePercent !== null) {
+        scaleMetrics.muscle_percent = b.musclePercent;
+        scaleMetrics.muscle_mass = round2((weightKg * b.musclePercent) / 100);
+      }
+      if (b.softLeanMassKg !== null) scaleMetrics.soft_lean_mass = b.softLeanMassKg;
+      if (b.bodyWaterMassKg !== null) scaleMetrics.body_water_mass = b.bodyWaterMassKg;
       if (b.fatFreeMassKg !== null) scaleMetrics.fat_free_mass = b.fatFreeMassKg;
       if (b.bodyWaterMassKg !== null) scaleMetrics.body_water = round1((b.bodyWaterMassKg / weightKg) * 100);
     }

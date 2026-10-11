@@ -71,6 +71,23 @@ describe('BeurerSession pairing', () => {
   });
 });
 
+describe('BeurerSession linked slots', () => {
+  it('keeps a linked slot when the scale refuses the PIN, instead of registering another', () => {
+    const { session, errors, rejected } = setup({ userIndex: 1, consentCode: 1, linked: true });
+    session.begin();
+    session.handleControlPoint(bytes('200205'));
+    expect(rejected()).toBe(0);
+    expect(errors[0]).toMatch(/PIN for user 1/);
+  });
+
+  it('consents with the linked slot and PIN', () => {
+    const { session, writes, paired } = setup({ userIndex: 1, consentCode: 3907, linked: true });
+    session.begin();
+    expect(writes).toEqual(['0201430f']);
+    expect(paired).toEqual([]);
+  });
+});
+
 describe('BeurerSession readings', () => {
   const paired = { userIndex: 2, consentCode: 1234 };
 
@@ -88,6 +105,9 @@ describe('BeurerSession readings', () => {
     expect(w.scaleMetrics?.bmr).toBe(1620);
     expect(w.scaleMetrics?.bmi).toBe(31.4);
     expect(w.scaleMetrics?.body_water).toBeCloseTo(40.7, 1); // 36.96 / 90.82
+    expect(w.scaleMetrics?.muscle_percent).toBe(30.4);
+    expect(w.scaleMetrics?.soft_lean_mass).toBeCloseTo(49.08, 2);
+    expect(w.scaleMetrics?.body_water_mass).toBeCloseTo(36.96, 2);
     expect(w.takenAt).toBeGreaterThan(0);
     session.destroy();
   });

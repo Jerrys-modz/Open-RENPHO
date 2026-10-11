@@ -49,6 +49,13 @@ const EXTRAS: Partial<Record<Measurement['type'], { type: string; unit: string }
   skeletal_muscle: { type: 'Skeletal Muscle', unit: '%' },
   protein: { type: 'Protein', unit: '%' },
   impedance: { type: 'Impedance', unit: 'ohm' },
+  fat_mass: { type: 'Body Fat Mass', unit: 'kg' },
+  muscle_percent: { type: 'Muscle Percentage', unit: '%' },
+  skeletal_muscle_mass: { type: 'Skeletal Muscle Mass', unit: 'kg' },
+  bone_percent: { type: 'Bone Percentage', unit: '%' },
+  body_water_mass: { type: 'Body Water Mass', unit: 'kg' },
+  protein_mass: { type: 'Protein Mass', unit: 'kg' },
+  soft_lean_mass: { type: 'Soft Lean Mass', unit: 'kg' },
 };
 
 const BUILT_IN_SITES = new Set(['waist', 'hips', 'neck']);

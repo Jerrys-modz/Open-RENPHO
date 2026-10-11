@@ -36,6 +36,6 @@ describe('weighInToMeasurements for a Beurer scale', () => {
 
   it('stores only what the scale sent when there is no profile', () => {
     const bare = weighInToMeasurements(weighIn, 1000, null);
-    expect(bare.map((m) => m.type).sort()).toEqual(['bmi', 'bmr', 'body_fat', 'impedance', 'muscle_mass', 'weight']);
+    expect(bare.map((m) => m.type).sort()).toEqual(['bmi', 'bmr', 'body_fat', 'fat_mass', 'impedance', 'muscle_mass', 'weight']);
   });
 });
