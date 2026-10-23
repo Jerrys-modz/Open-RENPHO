@@ -6,6 +6,8 @@ export interface ChartGeometry {
   min: number;
   max: number;
   last: { x: number; y: number } | null;
+  /** Where each input point landed, same order as the input. */
+  coords: { x: number; y: number }[];
 }
 
 export interface Padding {
@@ -27,7 +29,7 @@ export function buildChart(
   pad: Padding = DEFAULT_PAD,
 ): ChartGeometry {
   if (points.length === 0 || width <= 0 || height <= 0) {
-    return { line: '', area: '', min: 0, max: 0, last: null };
+    return { line: '', area: '', min: 0, max: 0, last: null, coords: [] };
   }
   const vs = points.map((p) => p.v);
   const min = Math.min(...vs);
@@ -45,5 +47,19 @@ export function buildChart(
   const line = xy.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x} ${p.y}`).join(' ');
   const area =
     xy.length > 1 ? `${line} L${xy[xy.length - 1].x} ${r(bottom)} L${xy[0].x} ${r(bottom)} Z` : '';
-  return { line, area, min, max, last: xy[xy.length - 1] };
+  return { line, area, min, max, last: xy[xy.length - 1], coords: xy };
+}
+
+/** Index of the point whose x is closest to `x`, or -1 when there are no points. Coords are left to right. */
+export function nearestIndex(coords: readonly { x: number }[], x: number): number {
+  let best = -1;
+  let bestDist = Infinity;
+  for (let i = 0; i < coords.length; i++) {
+    const d = Math.abs(coords[i].x - x);
+    if (d < bestDist) {
+      best = i;
+      bestDist = d;
+    }
+  }
+  return best;
 }

@@ -47,7 +47,7 @@ export default function Overview() {
           <Pressable key={m.id} onPress={() => setSelected(m.id)} accessibilityLabel={m.label} style={styles.chip}>
             {/* Colour when there is data for it, grey when there isn't; a ring marks the chosen one. */}
             <MetricIcon def={m} active={seriesFor(list, m.key).length > 0} selected={m.id === selected} />
-            <ThemedText subtle={m.id !== selected} style={styles.chipLabel}>
+            <ThemedText subtle={m.id !== selected} style={styles.chipLabel} numberOfLines={2}>
               {m.label}
             </ThemedText>
           </Pressable>
@@ -74,7 +74,14 @@ export default function Overview() {
           )}
         </View>
         {series.length > 0 ? (
-          <TrendChart points={series} color={def.color} />
+          <TrendChart
+            points={series}
+            color={def.color}
+            format={(v) => {
+              const f = formatForDisplay(def, v, units);
+              return `${f.text} ${f.unit}`.trim();
+            }}
+          />
         ) : (
           <ThemedText subtle style={styles.empty}>
             {hasData ? `No ${def.label.toLowerCase()} readings yet.` : 'No measurements yet. Weigh in or measure to get started.'}
@@ -144,9 +151,10 @@ function deltaText(d: number | null, m: MetricDef, units: UnitSystem): string | 
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
-  chips: { gap: 12, paddingVertical: 4 },
-  chip: { alignItems: 'center', gap: 4 },
-  chipLabel: { fontSize: 12 },
+  // Fixed-width chips keep the icons evenly spaced; long labels wrap instead of stretching the gap.
+  chips: { gap: 4, paddingVertical: 4 },
+  chip: { width: 68, alignItems: 'center', gap: 4 },
+  chipLabel: { fontSize: 11, textAlign: 'center' },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   small: { fontSize: 14 },
   big: { fontSize: 34, fontWeight: '700' },
