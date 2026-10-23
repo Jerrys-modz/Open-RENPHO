@@ -57,29 +57,8 @@ export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: Use
 
   if (bodyFat !== null) {
     out.push(add('body_fat', bodyFat));
-    const kg = (pct: number) => Math.round((w.weightKg * pct) / 100 * 100) / 100;
     // Estimates from body fat; anything the scale measured itself replaces them.
-    const metrics: Partial<Record<Measurement['type'], number>> = {};
-    if (profile) {
-      const d = deriveBodyMetrics(w.weightKg, heightMeters(profile), sexIndex(profile), bodyFat);
-      Object.assign(metrics, {
-        fat_mass: kg(bodyFat),
-        muscle_percent: round1((d.muscleMass / w.weightKg) * 100),
-        skeletal_muscle_mass: kg(d.skeletalMuscle),
-        bone_percent: round1((d.boneMass / w.weightKg) * 100),
-        body_water_mass: kg(d.bodyWater),
-        protein_mass: kg(d.protein),
-        bmi: d.bmi,
-        body_water: d.bodyWater,
-        skeletal_muscle: d.skeletalMuscle,
-        muscle_mass: d.muscleMass,
-        fat_free_mass: d.fatFreeMass,
-        bone_mass: d.boneMass,
-        protein: d.protein,
-        bmr: d.bmr,
-      });
-    }
-    metrics.fat_mass ??= kg(bodyFat);
+    const metrics = derivedMetrics(w.weightKg, bodyFat, profile);
     Object.assign(metrics, w.scaleMetrics);
     for (const [type, value] of Object.entries(metrics) as [Measurement['type'], number][]) {
       out.push(add(type, value));
@@ -90,3 +69,65 @@ export function weighInToMeasurements(w: WeighIn, takenAt: number, profile?: Use
 }
 
 const round1 = (v: number) => Math.round(v * 10) / 10;
+
+type Metrics = Partial<Record<Measurement['type'], number>>;
+
+/**
+ * Everything we can work out from weight and body fat. Body fat mass needs nothing else; the rest
+ * need the profile (sex and height).
+ */
+export function derivedMetrics(weightKg: number, bodyFat: number, profile?: UserProfile | null): Metrics {
+  const kg = (pct: number) => Math.round(((weightKg * pct) / 100) * 100) / 100;
+  const out: Metrics = { fat_mass: kg(bodyFat) };
+  if (!profile) return out;
+  let d;
+  try {
+    d = deriveBodyMetrics(weightKg, heightMeters(profile), sexIndex(profile), bodyFat);
+  } catch {
+    return out;
+  }
+  return {
+    ...out,
+    muscle_percent: round1((d.muscleMass / weightKg) * 100),
+    skeletal_muscle_mass: kg(d.skeletalMuscle),
+    bone_percent: round1((d.boneMass / weightKg) * 100),
+    body_water_mass: kg(d.bodyWater),
+    protein_mass: kg(d.protein),
+    bmi: d.bmi,
+    body_water: d.bodyWater,
+    skeletal_muscle: d.skeletalMuscle,
+    muscle_mass: d.muscleMass,
+    fat_free_mass: d.fatFreeMass,
+    bone_mass: d.boneMass,
+    protein: d.protein,
+    bmr: d.bmr,
+  };
+}
+
+/**
+ * Fills in stats that weigh-ins saved before they existed are missing (e.g. body fat mass), from the
+ * weight and body fat already stored. Never overwrites a stored value. Returns the same array when
+ * there is nothing to add.
+ */
+export function backfillDerived(list: readonly Measurement[], profile?: UserProfile | null): readonly Measurement[] {
+  const have = new Set<string>();
+  const entries = new Map<string, { weight?: number; bodyFat?: number; source: string; takenAt: number }>();
+  for (const m of list) {
+    if (m.type === 'circumference') continue;
+    const id = `${m.source}|${m.takenAt}`;
+    have.add(`${id}|${m.type}`);
+    const e = entries.get(id) ?? { source: m.source, takenAt: m.takenAt };
+    if (m.type === 'weight') e.weight = m.value;
+    if (m.type === 'body_fat') e.bodyFat = m.value;
+    entries.set(id, e);
+  }
+  const add: Measurement[] = [];
+  for (const [id, e] of entries) {
+    if (e.weight === undefined || e.bodyFat === undefined) continue;
+    const derived = derivedMetrics(e.weight, e.bodyFat, profile);
+    for (const [type, value] of Object.entries(derived) as [Measurement['type'], number][]) {
+      if (!have.has(`${id}|${type}`)) add.push({ type, value, takenAt: e.takenAt, source: e.source });
+    }
+  }
+  return add.length === 0 ? list : [...list, ...add];
+}

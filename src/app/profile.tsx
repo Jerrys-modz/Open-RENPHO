@@ -6,6 +6,7 @@ import { readDemoMode } from '@/demo';
 import { fromIsoDate, toIsoDate, validateProfile, type Sex } from '@/domain/profile';
 import { parseSlotLink } from '@/ble/beurer/protocol';
 import { clearBeurerPairing, loadBeurerPairing, saveBeurerPairing } from '@/storage/beurerPairing';
+import { backfillMeasurements } from '@/storage/useMeasurements';
 import { saveProfile, useProfile } from '@/storage/useProfile';
 import { setBeurerAnyUser, setUnits, useBeurerAnyUser, useUnits } from '@/storage/useSettings';
 import { Button, Card, SectionTitle } from '@/ui/components';
@@ -44,6 +45,7 @@ export default function ProfileScreen() {
     }
     setErrors([]);
     saveProfile(r.profile);
+    backfillMeasurements();
     router.back();
   };
 

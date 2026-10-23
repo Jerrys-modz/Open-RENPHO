@@ -1,5 +1,5 @@
 import type { UserProfile } from '@/domain/profile';
-import { weighInToMeasurements } from '../measurements';
+import { backfillDerived, weighInToMeasurements } from '../measurements';
 
 const PROFILE: UserProfile = { sex: 'male', birthDate: '1983-01-01', heightCm: 170, athlete: false };
 const types = (ms: { type: string }[]) => ms.map((m) => m.type);
@@ -92,5 +92,38 @@ describe('weighInToMeasurements', () => {
       // Same inputs as the real golden (M 43y, 1.70 m, 74.95 kg) but with 500 ohm instead of 505: about 21%.
       expect(get(out, 'body_fat')).toBeCloseTo(21, 0);
     });
+  });
+});
+
+describe('backfillDerived', () => {
+  const old = [
+    { type: 'weight' as const, value: 100, takenAt: 5, source: 'qn-scale' },
+    { type: 'body_fat' as const, value: 25, takenAt: 5, source: 'qn-scale' },
+    { type: 'bmi' as const, value: 34.6, takenAt: 5, source: 'qn-scale' },
+    { type: 'weight' as const, value: 99, takenAt: 6, source: 'qn-scale' }, // no body fat, nothing to derive from
+    { type: 'circumference' as const, value: 90, takenAt: 7, source: 'rf-bmf01', site: 'waist' },
+  ];
+
+  it('adds body fat mass without a profile and the rest with one', () => {
+    const bare = backfillDerived(old, null);
+    expect(get(bare as never, 'fat_mass')).toBe(25);
+    expect(bare.some((m) => m.type === 'muscle_percent')).toBe(false);
+    const full = backfillDerived(old, PROFILE);
+    for (const t of ['fat_mass', 'muscle_percent', 'bone_percent', 'body_water_mass', 'protein_mass', 'skeletal_muscle_mass']) {
+      expect(full.filter((m) => m.type === t && m.takenAt === 5)).toHaveLength(1);
+    }
+    expect(full.every((m) => m.takenAt !== 6 || m.type === 'weight')).toBe(true);
+  });
+
+  it('never overwrites a stored value and is idempotent', () => {
+    const full = backfillDerived(old, PROFILE);
+    expect(full.filter((m) => m.type === 'bmi')).toHaveLength(1);
+    expect(get(full as never, 'bmi')).toBe(34.6);
+    expect(backfillDerived(full, PROFILE)).toBe(full);
+  });
+
+  it('returns the same array when nothing is missing', () => {
+    const list = [{ type: 'weight' as const, value: 1, takenAt: 1, source: 's' }];
+    expect(backfillDerived(list, PROFILE)).toBe(list);
   });
 });
