@@ -47,7 +47,7 @@ jobs:
 
       # Best effort: the Xcode build is ~19 minutes from cold. Reusing DerivedData lets
       # xcodebuild skip compiling unchanged native code. A miss just costs a full build.
-      - uses: actions/cache@v4
+      - uses: actions/cache@v6
         with:
           path: build
           key: ios-build-${{ runner.os }}-${{ hashFiles('package-lock.json', 'app.json') }}
