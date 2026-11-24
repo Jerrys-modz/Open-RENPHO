@@ -34,7 +34,7 @@ export function saveProfile(p: UserProfile): void {
     try {
       const f = file();
       if (!f.exists) f.create();
-      f.write(serializeProfile(p));
+      f.writeSync(serializeProfile(p));
     } catch (e) {
       console.warn('[profile] could not save', e);
     }

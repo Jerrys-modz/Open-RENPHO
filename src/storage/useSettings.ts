@@ -49,7 +49,7 @@ function persist(): void {
     try {
       const f = file();
       if (!f.exists) f.create();
-      f.write(JSON.stringify({ version: 1, units: cache, beurerAnyUser: anyUserCache === true, pressure: pressureCache ?? 'mmHg' }));
+      f.writeSync(JSON.stringify({ version: 1, units: cache, beurerAnyUser: anyUserCache === true, pressure: pressureCache ?? 'mmHg' }));
     } catch (e) {
       console.warn('[settings] could not save', e);
     }

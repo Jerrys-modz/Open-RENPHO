@@ -38,7 +38,7 @@ const DARK: Palette = {
   danger: '#ff6b5e',
 };
 
-export const palette = (scheme: ColorSchemeName): Palette =>
+export const palette = (scheme: ColorSchemeName | null | undefined): Palette =>
   scheme === 'dark' ? DARK : LIGHT;
 
 export function useColors(): Palette {
@@ -46,7 +46,7 @@ export function useColors(): Palette {
 }
 
 /** Navigation theme with our colours, so headers and page backgrounds match the screens. */
-export function navigationTheme(scheme: ColorSchemeName) {
+export function navigationTheme(scheme: ColorSchemeName | null | undefined) {
   const p = palette(scheme);
   const base = scheme === 'dark' ? DarkTheme : DefaultTheme;
   return {
