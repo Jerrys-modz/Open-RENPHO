@@ -8,7 +8,7 @@ import { parseSlotLink } from '@/ble/beurer/protocol';
 import { clearBeurerPairing, loadBeurerPairing, saveBeurerPairing } from '@/storage/beurerPairing';
 import { backfillMeasurements } from '@/storage/useMeasurements';
 import { saveProfile, useProfile } from '@/storage/useProfile';
-import { setBeurerAnyUser, setUnits, useBeurerAnyUser, useUnits } from '@/storage/useSettings';
+import { setBeurerAnyUser, setPressureUnit, setUnits, useBeurerAnyUser, usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
@@ -22,6 +22,7 @@ export default function ProfileScreen() {
   const c = useColors();
   const existing = useProfile();
   const units = useUnits();
+  const pressure = usePressureUnit();
   const [sex, setSex] = useState<Sex>(existing?.sex ?? 'male');
   const scheme = useColorScheme();
   const [birth, setBirth] = useState<Date | null>(existing ? fromIsoDate(existing.birthDate) : null);
@@ -77,6 +78,19 @@ export default function ProfileScreen() {
             <ThemedText style={{ color: u === units ? c.accentText : c.text, fontWeight: '600' }}>
               {u === 'imperial' ? 'lb, in' : 'kg, cm'}
             </ThemedText>
+          </Pressable>
+        ))}
+      </View>
+
+      <SectionTitle>Blood pressure</SectionTitle>
+      <View style={styles.segment}>
+        {(['mmHg', 'kPa'] as const).map((u) => (
+          <Pressable
+            key={u}
+            onPress={() => setPressureUnit(u)}
+            style={[styles.segmentItem, { borderColor: c.border, backgroundColor: u === pressure ? c.accent : c.card }]}
+          >
+            <ThemedText style={{ color: u === pressure ? c.accentText : c.text, fontWeight: '600' }}>{u}</ThemedText>
           </Pressable>
         ))}
       </View>

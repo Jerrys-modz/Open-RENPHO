@@ -62,7 +62,13 @@ export const TAPE_METRICS: readonly MetricDef[] = [
   circ('calf', '#8d6e63'),
 ];
 
-export const METRICS: readonly MetricDef[] = [...SCALE_METRICS, ...TAPE_METRICS];
+export const BP_METRICS: readonly MetricDef[] = [
+  scale('bp_systolic', 'Systolic', 'mmHg', 0, '#e53935', 'heart.fill'),
+  scale('bp_diastolic', 'Diastolic', 'mmHg', 0, '#fb8c00', 'heart'),
+  scale('pulse', 'Pulse', 'bpm', 0, '#d81b60', 'waveform.path.ecg'),
+];
+
+export const METRICS: readonly MetricDef[] = [...SCALE_METRICS, ...BP_METRICS, ...TAPE_METRICS];
 
 export const SITES = TAPE_METRICS.map((m) => m.key.site as string);
 

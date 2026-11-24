@@ -1,8 +1,8 @@
 import { getMeasurements } from '@/storage/useMeasurements';
 import { loadSparkyKey } from '@/storage/sparkyKey';
 import { getSyncState, markAppleHealthSynced, markSparkySynced, updateSparky } from '@/storage/useSyncState';
-import { writeAppleHealthSamples } from './appleHealth';
-import { pendingSamples } from './appleHealthMapping';
+import { writeAppleHealthBloodPressure, writeAppleHealthSamples } from './appleHealth';
+import { pendingBloodPressure, pendingSamples } from './appleHealthMapping';
 import { postHealthData } from './sparkyClient';
 import { pendingSparkyItems } from './sparkyMapping';
 
@@ -38,11 +38,15 @@ function once(target: 'appleHealth' | 'sparky', run: () => Promise<SyncResult>):
 export function syncAppleHealth(): Promise<SyncResult> {
   if (!getSyncState().appleHealth.enabled) return Promise.resolve({ written: 0, failed: 0 });
   return once('appleHealth', async () => {
-    const todo = pendingSamples(getMeasurements(), new Set(getSyncState().appleHealth.synced));
-    if (todo.length === 0) return { written: 0, failed: 0 };
-    const { written, failed } = await writeAppleHealthSamples(todo);
+    const synced = new Set(getSyncState().appleHealth.synced);
+    const todo = pendingSamples(getMeasurements(), synced);
+    const bp = pendingBloodPressure(getMeasurements(), synced);
+    if (todo.length === 0 && bp.length === 0) return { written: 0, failed: 0 };
+    const a = todo.length ? await writeAppleHealthSamples(todo) : { written: [], failed: 0 };
+    const b = bp.length ? await writeAppleHealthBloodPressure(bp) : { written: [], failed: 0 };
+    const written = [...a.written, ...b.written];
     if (written.length > 0) markAppleHealthSynced(written, Date.now());
-    return { written: written.length, failed };
+    return { written: written.length, failed: a.failed + b.failed };
   });
 }
 

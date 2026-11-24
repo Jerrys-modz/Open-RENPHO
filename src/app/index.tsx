@@ -6,14 +6,14 @@ import { readDemoMode } from '@/demo';
 import { latestWithDelta, seriesFor } from '@/storage/measurements';
 import { useMeasurements } from '@/storage/useMeasurements';
 import { useProfile } from '@/storage/useProfile';
-import { useUnits } from '@/storage/useSettings';
+import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { TrendChart } from '@/ui/TrendChart';
 import { formatDateTime, formatShortDate } from '@/util/format';
-import { convertValue, formatDeltaForDisplay, formatForDisplay, type UnitSystem } from '@/util/units';
+import { convertValue, formatDeltaForDisplay, formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
 
 /** Shown when the chip list is collapsed. */
 const PRIMARY_IDS = ['weight', 'body_fat', 'bmi', 'muscle_mass', 'waist'];
@@ -26,6 +26,7 @@ export default function Overview() {
   const list = useMeasurements();
   const profile = useProfile();
   const units = useUnits();
+  const pressure = usePressureUnit();
   const [selected, setSelected] = useState('weight');
   const [showAll, setShowAll] = useState(false);
   const c = useColors();
@@ -60,6 +61,7 @@ export default function Overview() {
         <Button title="Weigh in" onPress={() => router.push('/scale')} />
         <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
       </View>
+      <Button title="Blood pressure" variant="secondary" onPress={() => router.push('/bp')} style={styles.historyButton} />
 
       <View style={styles.chips}>
         {chipList.map((m) => (
@@ -93,15 +95,15 @@ export default function Overview() {
               {def.label}
             </ThemedText>
             <ThemedText style={styles.big}>
-              {latest ? formatForDisplay(def, latest.point.v, units).text : '--'}{' '}
+              {latest ? formatForDisplay(def, latest.point.v, units, pressure).text : '--'}{' '}
               <ThemedText subtle style={styles.unit}>
-                {convertValue(0, def.unit, units).unit}
+                {convertValue(0, def.unit, units, pressure).unit}
               </ThemedText>
             </ThemedText>
           </View>
           {latest?.delta != null && (
             <ThemedText subtle style={styles.delta}>
-              {deltaText(latest.delta, def, units)}
+              {deltaText(latest.delta, def, units, pressure)}
             </ThemedText>
           )}
         </View>
@@ -141,7 +143,7 @@ export default function Overview() {
                 def={m}
                 value={formatForDisplay(m, l.point.v, units).text}
                 unit={formatForDisplay(m, l.point.v, units).unit}
-                delta={deltaText(l.delta, m, units)}
+                delta={deltaText(l.delta, m, units, pressure)}
               />
             ))}
           </Card>
@@ -158,7 +160,7 @@ export default function Overview() {
                 def={m}
                 value={formatForDisplay(m, l.point.v, units).text}
                 unit={formatForDisplay(m, l.point.v, units).unit}
-                delta={deltaText(l.delta, m, units)}
+                delta={deltaText(l.delta, m, units, pressure)}
                 caption={formatShortDate(l.point.t)}
               />
             ))}
@@ -171,9 +173,9 @@ export default function Overview() {
   );
 }
 
-function deltaText(d: number | null, m: MetricDef, units: UnitSystem): string | null {
+function deltaText(d: number | null, m: MetricDef, units: UnitSystem, pressure: PressureUnit): string | null {
   if (d === null) return null;
-  const f = formatDeltaForDisplay(m, d, units);
+  const f = formatDeltaForDisplay(m, d, units, pressure);
   return `${arrow(d)} ${f.text}${f.unit ? ` ${f.unit}` : ''}`;
 }
 

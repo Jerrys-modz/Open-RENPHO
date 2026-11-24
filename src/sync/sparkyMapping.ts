@@ -58,6 +58,17 @@ const EXTRAS: Partial<Record<Measurement['type'], { type: string; unit: string }
   soft_lean_mass: { type: 'Soft Lean Mass', unit: 'kg' },
 };
 
+/**
+ * Blood-pressure cuff readings. SparkyFitness has no blood-pressure field, so these are custom
+ * measurements (created on first use), always sent, in mmHg and bpm. Each reading keeps its own
+ * timestamp. Pulse is named apart from Sparky's own heart_rate so spot checks do not mix with it.
+ */
+const BLOOD_PRESSURE: Partial<Record<Measurement['type'], { type: string; unit: string }>> = {
+  bp_systolic: { type: 'Blood Pressure Systolic', unit: 'mmHg' },
+  bp_diastolic: { type: 'Blood Pressure Diastolic', unit: 'mmHg' },
+  pulse: { type: 'Pulse (cuff)', unit: 'bpm' },
+};
+
 const BUILT_IN_SITES = new Set(['waist', 'hips', 'neck']);
 
 export function toSparkyItem(m: Measurement, includeExtras: boolean): SparkyItem | null {
@@ -75,6 +86,8 @@ export function toSparkyItem(m: Measurement, includeExtras: boolean): SparkyItem
       ? item(m.site)
       : item(m.site[0].toUpperCase() + m.site.slice(1), 'cm');
   }
+  const bp = BLOOD_PRESSURE[m.type];
+  if (bp) return item(bp.type, bp.unit);
   const built = BUILT_IN[m.type];
   if (built) return item(built.type);
   const extra = EXTRAS[m.type];

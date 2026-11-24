@@ -119,3 +119,13 @@ describe('checkConnection', () => {
     expect(await checkConnection('https://s.com', 'K', reply(502, {}))).toMatchObject({ ok: false, message: expect.stringContaining('Could not reach') });
   });
 });
+
+describe('blood pressure to SparkyFitness', () => {
+  const bp = (type: Measurement['type'], value: number): Measurement => ({ type, value, takenAt: Date.UTC(2026, 9, 21, 18, 52), source: 'ihealth-kn550bt' });
+
+  it('sends readings as custom measurements in mmHg and bpm, even without extras', () => {
+    expect(toSparkyItem(bp('bp_systolic', 125), false)?.record).toMatchObject({ type: 'Blood Pressure Systolic', value: 125, unit: 'mmHg' });
+    expect(toSparkyItem(bp('bp_diastolic', 64), false)?.record).toMatchObject({ type: 'Blood Pressure Diastolic', unit: 'mmHg' });
+    expect(toSparkyItem(bp('pulse', 69), false)?.record).toMatchObject({ type: 'Pulse (cuff)', unit: 'bpm' });
+  });
+});

@@ -12,6 +12,7 @@ An Expo (React Native) app that reads RENPHO Bluetooth devices locally, with no 
 | SparkyFitness sync (own server, API key in the keychain, partial-failure aware) | implemented; **not yet tested against a live server** |
 | Weigh-in screen | minimal (weight + impedance) |
 | RF-BMF01 tape: protocol decoded, parser tested on real frames, live-length screen with save-on-checkmark | implemented; **not yet run in the app on hardware** |
+| iHealth KN-550BT blood-pressure cuff: protocol ported, tested on real captured frames; stored-reading import to history, Apple Health (BP correlation + heart rate) and SparkyFitness (custom measurements); mmHg/kPa display setting | implemented; **not yet run on hardware** |
 | Body-composition profile / history / settings | planned |
 | SparkyFitness sync | planned |
 | Apple Health sync | planned |
@@ -36,6 +37,7 @@ Before building, check `ios.bundleIdentifier` in `app.json`; it is a placeholder
 
 ```
 src/ble/beurer/      Beurer BF720: standard-profile parser, user-slot handshake, transport
+src/ble/ihealth/    iHealth KN-550BT cuff: XXTEA handshake, framing, readings, session, transport
 src/ble/qn/          scale protocol (pure TS), session state machine, body-composition math, BLE transport
 src/ble/base64.ts    ble-plx value encoding
 src/domain/          device-independent types (Measurement, UserProfile)
@@ -43,4 +45,4 @@ src/app/             expo-router screens
 docs/protocol/       protocol notes and capture checklists
 ```
 
-Credit: the scale protocol and body-fat math are ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT), see `THIRD_PARTY_NOTICES.md`. Not affiliated with RENPHO.
+Credit: the iHealth cuff protocol is ported from [hass-ihealth-bp](https://github.com/NickLD/hass-ihealth-bp) (MIT). The scale protocol and body-fat math are ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT), see `THIRD_PARTY_NOTICES.md`. Not affiliated with RENPHO.

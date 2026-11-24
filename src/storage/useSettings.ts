@@ -1,13 +1,14 @@
 import { File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
 import { readDemoMode } from '@/demo';
-import { defaultUnitSystem, type UnitSystem } from '@/util/units';
+import { defaultUnitSystem, type PressureUnit, type UnitSystem } from '@/util/units';
 
 // Display preferences only; measurements are always stored in kg and cm.
 const file = () => new File(Paths.document, 'settings.json');
 const demo = readDemoMode() !== null;
 let cache: UnitSystem | undefined;
 let anyUserCache: boolean | undefined;
+let pressureCache: PressureUnit | undefined;
 const listeners = new Set<() => void>();
 
 function systemLocale(): string | undefined {
@@ -26,7 +27,8 @@ function snapshot(): UnitSystem {
       try {
         const f = file();
         if (f.exists) {
-          const data = JSON.parse(f.textSync()) as { units?: unknown; beurerAnyUser?: unknown };
+          const data = JSON.parse(f.textSync()) as { units?: unknown; beurerAnyUser?: unknown; pressure?: unknown };
+          if (data.pressure === 'mmHg' || data.pressure === 'kPa') pressureCache = data.pressure;
           if (data.units === 'metric' || data.units === 'imperial') cache = data.units;
           anyUserCache = data.beurerAnyUser === true;
         }
@@ -47,7 +49,7 @@ function persist(): void {
     try {
       const f = file();
       if (!f.exists) f.create();
-      f.write(JSON.stringify({ version: 1, units: cache, beurerAnyUser: anyUserCache === true }));
+      f.write(JSON.stringify({ version: 1, units: cache, beurerAnyUser: anyUserCache === true, pressure: pressureCache ?? 'mmHg' }));
     } catch (e) {
       console.warn('[settings] could not save', e);
     }
@@ -59,6 +61,29 @@ export function setUnits(units: UnitSystem): void {
   snapshot();
   cache = units;
   persist();
+}
+
+/** Display only: blood pressure is always stored and synced in mmHg. */
+export function getPressureUnit(): PressureUnit {
+  snapshot();
+  return pressureCache ?? 'mmHg';
+}
+
+export function setPressureUnit(unit: PressureUnit): void {
+  snapshot();
+  pressureCache = unit;
+  persist();
+}
+
+export function usePressureUnit(): PressureUnit {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    getPressureUnit,
+    getPressureUnit,
+  );
 }
 
 /** Whether to take Beurer weigh-ins the scale files under another user slot. Off by default. */

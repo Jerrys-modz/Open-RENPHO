@@ -1,5 +1,5 @@
 import type { Measurement } from '@/domain/measurement';
-import { measurementKey, pendingSamples, toHealthSample } from '../appleHealthMapping';
+import { measurementKey, pendingBloodPressure, pendingSamples, toHealthSample } from '../appleHealthMapping';
 
 const m = (type: Measurement['type'], value: number, extra: Partial<Measurement> = {}): Measurement => ({
   type,
@@ -52,5 +52,25 @@ describe('pendingSamples', () => {
 
   it('keeps waist and hips taken at the same time distinct', () => {
     expect(measurementKey(m('circumference', 1, { site: 'waist' }))).not.toBe(measurementKey(m('circumference', 1, { site: 'hips' })));
+  });
+});
+
+describe('blood pressure', () => {
+  const bp = (type: Measurement['type'], value: number, takenAt = 5_000): Measurement => ({ type, value, takenAt, source: 'ihealth-kn550bt' });
+  const list = [bp('bp_systolic', 125), bp('bp_diastolic', 64), bp('pulse', 69)];
+
+  it('sends pulse as heart rate and leaves the pressures to the pair writer', () => {
+    expect(toHealthSample(bp('pulse', 69))).toMatchObject({ identifier: 'HKQuantityTypeIdentifierHeartRate', unit: 'count/min', value: 69 });
+    expect(toHealthSample(bp('bp_systolic', 125))).toBeNull();
+  });
+
+  it('pairs systolic and diastolic of the same reading', () => {
+    const [s] = pendingBloodPressure(list, new Set());
+    expect(s).toMatchObject({ systolic: 125, diastolic: 64, date: 5_000 });
+    expect(pendingBloodPressure(list, new Set(s.keys))).toEqual([]);
+  });
+
+  it('skips a reading missing one half', () => {
+    expect(pendingBloodPressure([bp('bp_systolic', 125)], new Set())).toEqual([]);
   });
 });
