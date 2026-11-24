@@ -11,5 +11,9 @@ export function readingToMeasurements(r: CuffReading): Measurement[] {
     takenAt: r.takenAt,
     source: IHEALTH_SOURCE,
   });
-  return [add('bp_systolic', r.systolic), add('bp_diastolic', r.diastolic), add('pulse', r.pulse)];
+  const out = [add('bp_systolic', r.systolic), add('bp_diastolic', r.diastolic), add('pulse', r.pulse)];
+  // Flags are stored only when the cuff set them, so ordinary readings stay three rows.
+  if (r.irregularPulse) out.push(add('irregular_pulse', 1));
+  if (r.bodyMovement) out.push(add('body_movement', 1));
+  return out;
 }

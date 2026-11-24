@@ -71,6 +71,16 @@ export function demoMeasurements(): Measurement[] {
       out.push({ type, value, takenAt, source: 'qn-scale' });
     }
   }
+  // A blood-pressure reading every other morning for the last three weeks.
+  for (let i = 0; i < 21; i += 2) {
+    const takenAt = DEMO_NOW - i * DAY;
+    const sys = 128 - Math.round(i * 0.3) + Math.round(Math.sin(i) * 4);
+    const dia = 82 - Math.round(i * 0.15) + Math.round(Math.cos(i) * 3);
+    out.push({ type: 'bp_systolic', value: sys, takenAt, source: 'ihealth-kn550bt' });
+    out.push({ type: 'bp_diastolic', value: dia, takenAt, source: 'ihealth-kn550bt' });
+    out.push({ type: 'pulse', value: 66 + Math.round(Math.sin(i / 2) * 4), takenAt, source: 'ihealth-kn550bt' });
+    if (i === 10) out.push({ type: 'irregular_pulse', value: 1, takenAt, source: 'ihealth-kn550bt' });
+  }
   const sites: [string, number, number][] = [
     ['waist', 91.0, -0.7],
     ['hips', 101.2, -0.35],
