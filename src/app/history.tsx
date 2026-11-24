@@ -1,14 +1,16 @@
 import { Alert, FlatList, StyleSheet, View } from 'react-native';
 import { groupEntries, type Entry } from '@/storage/measurements';
 import { deleteEntry, useMeasurements } from '@/storage/useMeasurements';
-import { useUnits } from '@/storage/useSettings';
+import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card } from '@/ui/components';
 import { METRICS, metricById } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatDateTime } from '@/util/format';
-import { formatForDisplay, type UnitSystem } from '@/util/units';
+import { formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
 
-function summary(e: Entry, units: UnitSystem): { title: string; detail: string } {
+const BP_DEF = { unit: 'mmHg', digits: 0 };
+
+function summary(e: Entry, units: UnitSystem, pressure: PressureUnit): { title: string; detail: string } {
   if (e.kind === 'tape') {
     const m = e.measurements[0];
     const def = METRICS.find((d) => d.key.type === 'circumference' && d.key.site === m.site) ?? metricById('waist');
@@ -20,7 +22,7 @@ function summary(e: Entry, units: UnitSystem): { title: string; detail: string }
     const dia = e.measurements.find((m) => m.type === 'bp_diastolic');
     const pulse = e.measurements.find((m) => m.type === 'pulse');
     return {
-      title: sys && dia ? `${Math.round(sys.value)}/${Math.round(dia.value)} mmHg` : 'Blood pressure',
+      title: sys && dia ? `${formatForDisplay(BP_DEF, sys.value, units, pressure).text}/${formatForDisplay(BP_DEF, dia.value, units, pressure).text} ${pressure}` : 'Blood pressure',
       detail: pulse ? `Pulse ${Math.round(pulse.value)} bpm` : 'Blood pressure',
     };
   }
@@ -36,6 +38,7 @@ function summary(e: Entry, units: UnitSystem): { title: string; detail: string }
 export default function HistoryScreen() {
   const list = useMeasurements();
   const units = useUnits();
+  const pressure = usePressureUnit();
   const entries = groupEntries(list);
 
   const confirmDelete = (e: Entry) =>
@@ -59,7 +62,7 @@ export default function HistoryScreen() {
         </ThemedText>
       }
       renderItem={({ item }) => {
-        const s = summary(item, units);
+        const s = summary(item, units, pressure);
         return (
           <Card style={styles.row}>
             <View style={{ flex: 1 }}>

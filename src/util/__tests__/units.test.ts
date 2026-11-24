@@ -64,3 +64,19 @@ describe('height input', () => {
     expect(heightToInput(177.8, 'imperial')).toBe('70');
   });
 });
+
+describe('blood pressure units', () => {
+  const bp = { unit: 'mmHg', digits: 0 };
+  it('shows mmHg untouched by the weight/length system', () => {
+    expect(formatForDisplay(bp, 125, 'imperial')).toEqual({ text: '125', unit: 'mmHg' });
+    expect(formatForDisplay(bp, 125, 'metric', 'mmHg')).toEqual({ text: '125', unit: 'mmHg' });
+  });
+  it('converts to kPa with one decimal', () => {
+    expect(formatForDisplay(bp, 120, 'metric', 'kPa')).toEqual({ text: '16.0', unit: 'kPa' });
+    expect(formatForDisplay(bp, 80, 'imperial', 'kPa')).toEqual({ text: '10.7', unit: 'kPa' });
+  });
+  it('converts a change in pressure too', () => {
+    expect(formatDeltaForDisplay(bp, 10, 'metric', 'kPa')).toEqual({ text: '+1.3', unit: 'kPa' });
+    expect(formatDeltaForDisplay(bp, -10, 'metric')).toEqual({ text: '-10', unit: 'mmHg' });
+  });
+});

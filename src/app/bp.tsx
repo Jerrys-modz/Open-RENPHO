@@ -3,14 +3,19 @@ import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { readingToMeasurements } from '@/ble/ihealth/measurements';
 import { CuffConnection } from '@/ble/ihealth/transport';
 import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
+import { usePressureUnit } from '@/storage/useSettings';
 import { syncAppleHealth } from '@/sync';
 import { Button, Card } from '@/ui/components';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatDateTime } from '@/util/format';
+import { formatForDisplay } from '@/util/units';
+
+const BP_DEF = { unit: 'mmHg', digits: 0 };
 
 export default function BloodPressureScreen() {
   const conn = useRef<CuffConnection | null>(null);
   const list = useMeasurements();
+  const pressure = usePressureUnit();
   const [status, setStatus] = useState('Ready');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -61,9 +66,11 @@ export default function BloodPressureScreen() {
       <Card style={styles.hero}>
         <ThemedText subtle>{status}</ThemedText>
         <ThemedText style={styles.value}>
-          {latest && latestDia ? `${Math.round(latest.value)}/${Math.round(latestDia.value)}` : '--'}{' '}
+          {latest && latestDia
+            ? `${formatForDisplay(BP_DEF, latest.value, 'metric', pressure).text}/${formatForDisplay(BP_DEF, latestDia.value, 'metric', pressure).text}`
+            : '--'}{' '}
           <ThemedText subtle style={styles.unit}>
-            mmHg
+            {pressure}
           </ThemedText>
         </ThemedText>
         {latest && <ThemedText subtle>{formatDateTime(latest.takenAt)}</ThemedText>}
