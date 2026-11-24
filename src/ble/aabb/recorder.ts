@@ -132,7 +132,7 @@ const secs = (ms: number) => `${(ms / 1000).toFixed(1)}s`;
 /** A compact text report (a few kB) that is easy to paste into a message. */
 export function buildReport(r: FrameRecorder, info: ReportInfo, rawLimit = 300): string {
   const lines: string[] = [];
-  lines.push('Open RENPHO scale capture');
+  lines.push('Keel scale capture');
   lines.push(`Condition: ${info.label}`);
   lines.push(`Started: ${info.startedAt.toISOString()}  Duration: ${secs(info.durationMs)}`);
   lines.push(`Scale MAC: ${info.mac ?? 'none seen'}${info.otherScaleFrames ? `  (ignored ${info.otherScaleFrames} frames from other scales)` : ''}`);

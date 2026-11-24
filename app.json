@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "Open RENPHO",
+    "name": "Keel",
     "slug": "open-renpho",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -19,7 +19,7 @@
       [
         "react-native-ble-plx",
         {
-          "bluetoothAlwaysPermission": "Open RENPHO connects to your RENPHO scale and tape measure, and your iHealth blood-pressure cuff, over Bluetooth to read your measurements."
+          "bluetoothAlwaysPermission": "Keel connects to your RENPHO scale and tape measure, and your iHealth blood-pressure cuff, over Bluetooth to read your measurements."
         }
       ],
       "@react-native-community/datetimepicker",
@@ -27,14 +27,14 @@
       [
         "@kingstinct/react-native-healthkit",
         {
-          "NSHealthShareUsageDescription": "Open RENPHO only saves measurements to Apple Health. It does not read your health data.",
-          "NSHealthUpdateUsageDescription": "Open RENPHO saves your weight, body fat, lean mass, BMI, waist, blood pressure and pulse measurements to Apple Health.",
+          "NSHealthShareUsageDescription": "Keel only saves measurements to Apple Health. It does not read your health data.",
+          "NSHealthUpdateUsageDescription": "Keel saves your weight, body fat, lean mass, BMI, waist, blood pressure and pulse measurements to Apple Health.",
           "background": false
         }
       ],
       "expo-secure-store"
     ],
-    "scheme": "open-renpho",
+    "scheme": "keel",
     "experiments": {
       "typedRoutes": true
     },
