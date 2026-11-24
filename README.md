@@ -32,19 +32,17 @@ Data stays on your phone. The only network traffic is the sync to a SparkyFitnes
 
 ## Running
 
-To get a build on your iPhone without a Mac, see [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md).
-
 BLE and HealthKit need native code, so **Expo Go will not work**. Use a development build on a real iPhone:
 
 ```bash
 npm install
 npx expo run:ios --device        # needs a Mac with Xcode, or:
-npx eas-cli@latest build --profile development --platform ios
+npx eas-cli@latest build --profile development --platform ios   # cloud build, no Mac needed
 npm test                         # protocol, session and maths tests, no hardware needed
 npm run typecheck && npm run lint
 ```
 
-`ios.bundleIdentifier` in `app.json` is still `com.jerrysmodz.openrenpho`; change it before shipping under your own Apple account (see the TestFlight doc).
+`ios.bundleIdentifier` in `app.json` is still `com.jerrysmodz.openrenpho`; change it before building under your own Apple account. Cloud builds use the profiles in `eas.json` (`npm run build:device`, `npm run build:testflight`, `npm run submit:testflight`), and the "EAS build (manual)" workflow needs an `EXPO_TOKEN` repository secret.
 
 CI runs typecheck, lint, tests and `expo-doctor` on every PR. A separate workflow builds the app for the simulator and uploads light and dark screenshots (it uses demo data, since the simulator has no Bluetooth).
 

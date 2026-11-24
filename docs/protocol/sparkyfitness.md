@@ -29,6 +29,8 @@ with `POST {server}/api/health-data`. Sources: the
 | BMR | `bmr` | kcal (server rejects values outside its plausible range) |
 | waist, hips, neck | `waist`, `hips`, `neck` | cm |
 | other tape sites | `Chest`, `Bicep`, ... (custom) | cm |
+| blood pressure | `Blood Pressure Systolic`, `Blood Pressure Diastolic` (custom, always sent) | mmHg |
+| cuff pulse | `Pulse (cuff)` (custom, always sent; kept apart from Sparky's own `heart_rate`) | bpm |
 | BMI, fat-free mass, skeletal muscle, protein, impedance | custom; only if "extra metrics" is on | kg / % / ohm |
 
 Notes from the server code: `LeanBodyMass`, `body_water` and `BodyFat` are *not* built in (they become custom),
@@ -36,7 +38,8 @@ which is why we use `body_water_percentage` and `body_fat`.
 
 ## Behaviour
 
-- Check-in fields hold **one value per day**; the later record wins. Readings are sent oldest first so the
+- Check-in fields hold **one value per day**; the later record wins. Custom measurements (blood pressure, pulse, tape sites) are
+  sent with their timestamp so each cuff reading is kept. Readings are sent oldest first so the
   last weigh-in of a day is the one kept.
 - Sent readings are remembered by key (`type|site|time`) in `sync.json`, so nothing is sent twice.
 - A batch (100 records) counts as sent when the server answers 200. Rejected records are shown on the Sync

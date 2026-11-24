@@ -2,7 +2,6 @@ name: EAS build (manual)
 
 # Runs a cloud build on EAS (no Mac needed). Needs the EXPO_TOKEN repository secret
 # (expo.dev -> Account settings -> Access tokens). Optionally submits to TestFlight.
-# One-time setup is in docs/TESTFLIGHT.md.
 on:
   workflow_dispatch:
     inputs:
