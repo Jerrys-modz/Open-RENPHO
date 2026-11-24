@@ -1,4 +1,5 @@
 import { Redirect, router } from 'expo-router';
+import { SymbolView } from 'expo-symbols';
 import { useState } from 'react';
 import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { readDemoMode } from '@/demo';
@@ -8,10 +9,14 @@ import { useProfile } from '@/storage/useProfile';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
+import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { TrendChart } from '@/ui/TrendChart';
 import { formatDateTime, formatShortDate } from '@/util/format';
 import { convertValue, formatDeltaForDisplay, formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
+
+/** Shown when the chip list is collapsed. */
+const PRIMARY_IDS = ['weight', 'body_fat', 'bmi', 'muscle_mass', 'waist'];
 
 const arrow = (d: number) => (d > 0 ? '↑' : d < 0 ? '↓' : '→');
 
@@ -23,8 +28,17 @@ export default function Overview() {
   const units = useUnits();
   const pressure = usePressureUnit();
   const [selected, setSelected] = useState('weight');
+  const [showAll, setShowAll] = useState(false);
+  const c = useColors();
 
   if (demo === 'scale' || demo === 'tape' || demo === 'profile' || demo === 'capture') return <Redirect href={`/${demo}`} />;
+
+  // Collapsed: a handful of favourites (plus whatever is selected) so the row fits without scrolling.
+  const chipList = showAll
+    ? METRICS
+    : PRIMARY_IDS.includes(selected)
+      ? PRIMARY_IDS.map(metricById)
+      : [...PRIMARY_IDS.slice(0, PRIMARY_IDS.length - 1).map(metricById), metricById(selected)];
 
   const def = metricById(selected);
   const series = seriesFor(list, def.key);
@@ -43,17 +57,36 @@ export default function Overview() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
-        {METRICS.map((m) => (
+      <View style={styles.actions}>
+        <Button title="Weigh in" onPress={() => router.push('/scale')} />
+        <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
+      </View>
+      <Button title="Blood pressure" variant="secondary" onPress={() => router.push('/bp')} style={styles.historyButton} />
+
+      <View style={styles.chips}>
+        {chipList.map((m) => (
           <Pressable key={m.id} onPress={() => setSelected(m.id)} accessibilityLabel={m.label} style={styles.chip}>
             {/* Colour when there is data for it, grey when there isn't; a ring marks the chosen one. */}
             <MetricIcon def={m} active={seriesFor(list, m.key).length > 0} selected={m.id === selected} />
-            <ThemedText subtle={m.id !== selected} style={styles.chipLabel}>
+            <ThemedText subtle={m.id !== selected} style={styles.chipLabel} numberOfLines={2}>
               {m.label}
             </ThemedText>
           </Pressable>
         ))}
-      </ScrollView>
+        <Pressable onPress={() => setShowAll((v) => !v)} accessibilityLabel={showAll ? 'Show fewer metrics' : 'Show all metrics'} style={styles.chip}>
+          <View style={[styles.moreIcon, { backgroundColor: c.chipOff }]}>
+            <SymbolView
+              name={showAll ? 'chevron.up' : 'ellipsis'}
+              size={20}
+              tintColor={c.subtext}
+              fallback={<ThemedText subtle>{showAll ? '–' : '…'}</ThemedText>}
+            />
+          </View>
+          <ThemedText subtle style={styles.chipLabel}>
+            {showAll ? 'Less' : 'More'}
+          </ThemedText>
+        </Pressable>
+      </View>
 
       <Card>
         <View style={styles.chartHeader}>
@@ -75,7 +108,14 @@ export default function Overview() {
           )}
         </View>
         {series.length > 0 ? (
-          <TrendChart points={series} color={def.color} />
+          <TrendChart
+            points={series}
+            color={def.color}
+            format={(v) => {
+              const f = formatForDisplay(def, v, units);
+              return `${f.text} ${f.unit}`.trim();
+            }}
+          />
         ) : (
           <ThemedText subtle style={styles.empty}>
             {hasData ? `No ${def.label.toLowerCase()} readings yet.` : 'No measurements yet. Weigh in or measure to get started.'}
@@ -128,11 +168,6 @@ export default function Overview() {
         </>
       )}
 
-      <View style={styles.actions}>
-        <Button title="Weigh in" onPress={() => router.push('/scale')} />
-        <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
-      </View>
-      <Button title="Blood pressure" variant="secondary" onPress={() => router.push('/bp')} style={styles.historyButton} />
       {hasData && <Button title="History" variant="secondary" onPress={() => router.push('/history')} style={styles.historyButton} />}
     </ScrollView>
   );
@@ -146,16 +181,18 @@ function deltaText(d: number | null, m: MetricDef, units: UnitSystem, pressure: 
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 12 },
-  chips: { gap: 12, paddingVertical: 4 },
-  chip: { alignItems: 'center', gap: 4 },
-  chipLabel: { fontSize: 12 },
+  // Six equal columns, so the icons are evenly spaced and nothing scrolls sideways.
+  chips: { flexDirection: 'row', flexWrap: 'wrap', rowGap: 8 },
+  chip: { width: '16.666%', alignItems: 'center', gap: 4 },
+  chipLabel: { fontSize: 11, textAlign: 'center' },
+  moreIcon: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
   chartHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   small: { fontSize: 14 },
   big: { fontSize: 34, fontWeight: '700' },
   unit: { fontSize: 16, fontWeight: '400' },
   delta: { fontSize: 15, marginTop: 4 },
   empty: { textAlign: 'center', paddingVertical: 24 },
-  actions: { flexDirection: 'row', gap: 12, marginTop: 4 },
+  actions: { flexDirection: 'row', gap: 12 },
   profileTitle: { fontSize: 17, fontWeight: '600' },
   profileText: { fontSize: 14 },
   profileButton: { flex: 0 },

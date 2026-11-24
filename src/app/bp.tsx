@@ -4,7 +4,7 @@ import { readingToMeasurements } from '@/ble/ihealth/measurements';
 import { CuffConnection } from '@/ble/ihealth/transport';
 import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
 import { usePressureUnit } from '@/storage/useSettings';
-import { syncAppleHealth } from '@/sync';
+import { syncAll } from '@/sync';
 import { Button, Card } from '@/ui/components';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatDateTime } from '@/util/format';
@@ -42,7 +42,7 @@ export default function BloodPressureScreen() {
       onBattery: setBattery,
       onReadings: (readings) => {
         addMeasurements(readings.flatMap(readingToMeasurements));
-        void syncAppleHealth();
+        void syncAll();
       },
       onDone: ({ imported, deleted }) => {
         setBusy(false);

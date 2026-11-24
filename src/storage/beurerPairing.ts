@@ -11,7 +11,7 @@ export function loadBeurerPairing(): BeurerPairing | null {
     if (!f.exists) return null;
     const v = JSON.parse(f.textSync()) as Partial<BeurerPairing>;
     return Number.isInteger(v.userIndex) && Number.isInteger(v.consentCode)
-      ? { userIndex: v.userIndex as number, consentCode: v.consentCode as number }
+      ? { userIndex: v.userIndex as number, consentCode: v.consentCode as number, ...(v.linked === true ? { linked: true } : {}) }
       : null;
   } catch {
     return null;

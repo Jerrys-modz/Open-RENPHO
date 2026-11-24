@@ -29,6 +29,7 @@ export interface BeurerStore {
   load: () => BeurerPairing | null;
   save: (p: BeurerPairing) => void;
   clear: () => void;
+  acceptAnyUser: () => boolean;
 }
 
 /** Subscriptions are written asynchronously; give them a moment before the scale is introduced to us. */
@@ -68,6 +69,8 @@ export class BeurerConnection {
         writeControlPoint: (b) => writeB64(SERVICE_USER_DATA, CHAR_USER_CONTROL_POINT, b),
         onPaired: (p) => this.store.save(p),
         onPairingRejected: () => this.store.clear(),
+        acceptAnyUser: this.store.acceptAnyUser,
+        onDebug: h.onDebug,
         onConsented: (p) => {
           void (async () => {
             const u = h.userProfile;

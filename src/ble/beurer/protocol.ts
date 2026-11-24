@@ -251,6 +251,21 @@ export const buildGender = (sex: 'male' | 'female'): Uint8Array => Uint8Array.fr
 /** Height (0x2A8E): whole centimetres, u16. */
 export const buildHeight = (heightCm: number): Uint8Array => Uint8Array.from(le16(Math.round(heightCm)));
 
+export const MAX_USER_SLOT = 8;
+
+export type SlotLink = { ok: true; userIndex: number; consentCode: number } | { ok: false; error: string };
+
+/** Checks a slot number and PIN typed from the Beurer app. The scale has 8 slots; the PIN is up to 4 digits. */
+export function parseSlotLink(slotText: string, pinText: string): SlotLink {
+  const slot = slotText.trim();
+  const pin = pinText.trim();
+  if (!/^\d+$/.test(slot) || Number(slot) < 1 || Number(slot) > MAX_USER_SLOT) {
+    return { ok: false, error: `The user number is 1 to ${MAX_USER_SLOT}.` };
+  }
+  if (!/^\d{1,4}$/.test(pin)) return { ok: false, error: 'The PIN is up to 4 digits.' };
+  return { ok: true, userIndex: Number(slot), consentCode: Number(pin) };
+}
+
 function round(v: number, digits: number): number {
   const f = 10 ** digits;
   return Math.round(v * f) / f;

@@ -6,6 +6,7 @@
  * A single scan watches for both.
  */
 import type { Device } from 'react-native-ble-plx';
+import { getBeurerAnyUser } from '@/storage/useSettings';
 import { clearBeurerPairing, loadBeurerPairing, saveBeurerPairing } from '@/storage/beurerPairing';
 import { AabbSession } from '../aabb/session';
 import { BeurerConnection } from '../beurer/transport';
@@ -19,7 +20,12 @@ export type { WeighInHandlers };
 export class ScaleConnection {
   private manager = getBleManager();
   private qn = new QnScaleConnection();
-  private beurer = new BeurerConnection({ load: loadBeurerPairing, save: saveBeurerPairing, clear: clearBeurerPairing });
+  private beurer = new BeurerConnection({
+    load: loadBeurerPairing,
+    save: saveBeurerPairing,
+    clear: clearBeurerPairing,
+    acceptAnyUser: getBeurerAnyUser,
+  });
   private active = false;
   private connecting = false;
 

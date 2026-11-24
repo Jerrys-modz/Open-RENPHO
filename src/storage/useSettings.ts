@@ -7,6 +7,7 @@ import { defaultUnitSystem, type PressureUnit, type UnitSystem } from '@/util/un
 const file = () => new File(Paths.document, 'settings.json');
 const demo = readDemoMode() !== null;
 let cache: UnitSystem | undefined;
+let anyUserCache: boolean | undefined;
 let pressureCache: PressureUnit | undefined;
 const listeners = new Set<() => void>();
 
@@ -21,13 +22,15 @@ function systemLocale(): string | undefined {
 function snapshot(): UnitSystem {
   if (cache === undefined) {
     cache = demo ? 'imperial' : defaultUnitSystem(systemLocale());
+    anyUserCache = false;
     if (!demo) {
       try {
         const f = file();
         if (f.exists) {
-          const saved = JSON.parse(f.textSync()) as { units?: unknown; pressure?: unknown };
-          if (saved.units === 'metric' || saved.units === 'imperial') cache = saved.units;
-          if (saved.pressure === 'mmHg' || saved.pressure === 'kPa') pressureCache = saved.pressure;
+          const data = JSON.parse(f.textSync()) as { units?: unknown; beurerAnyUser?: unknown; pressure?: unknown };
+          if (data.pressure === 'mmHg' || data.pressure === 'kPa') pressureCache = data.pressure;
+          if (data.units === 'metric' || data.units === 'imperial') cache = data.units;
+          anyUserCache = data.beurerAnyUser === true;
         }
       } catch {
         // keep the locale default
@@ -41,44 +44,68 @@ export function getUnits(): UnitSystem {
   return snapshot();
 }
 
-function pressureSnapshot(): PressureUnit {
-  snapshot(); // loads the file, which fills pressureCache if it was saved
-  return pressureCache ?? 'mmHg';
-}
-
 function persist(): void {
-  if (demo) return;
-  try {
-    const f = file();
-    if (!f.exists) f.create();
-    f.write(JSON.stringify({ version: 1, units: snapshot(), pressure: pressureSnapshot() }));
-  } catch (e) {
-    console.warn('[settings] could not save', e);
+  if (!demo) {
+    try {
+      const f = file();
+      if (!f.exists) f.create();
+      f.write(JSON.stringify({ version: 1, units: cache, beurerAnyUser: anyUserCache === true, pressure: pressureCache ?? 'mmHg' }));
+    } catch (e) {
+      console.warn('[settings] could not save', e);
+    }
   }
+  listeners.forEach((l) => l());
 }
 
 export function setUnits(units: UnitSystem): void {
+  snapshot();
   cache = units;
   persist();
-  listeners.forEach((l) => l());
+}
+
+/** Display only: blood pressure is always stored and synced in mmHg. */
+export function getPressureUnit(): PressureUnit {
+  snapshot();
+  return pressureCache ?? 'mmHg';
 }
 
 export function setPressureUnit(unit: PressureUnit): void {
   snapshot();
   pressureCache = unit;
   persist();
-  listeners.forEach((l) => l());
 }
 
-/** Display only: blood pressure is always stored and synced in mmHg. */
 export function usePressureUnit(): PressureUnit {
   return useSyncExternalStore(
     (cb) => {
       listeners.add(cb);
       return () => listeners.delete(cb);
     },
-    pressureSnapshot,
-    pressureSnapshot,
+    getPressureUnit,
+    getPressureUnit,
+  );
+}
+
+/** Whether to take Beurer weigh-ins the scale files under another user slot. Off by default. */
+export function getBeurerAnyUser(): boolean {
+  snapshot();
+  return anyUserCache === true;
+}
+
+export function setBeurerAnyUser(on: boolean): void {
+  snapshot();
+  anyUserCache = on;
+  persist();
+}
+
+export function useBeurerAnyUser(): boolean {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    getBeurerAnyUser,
+    getBeurerAnyUser,
   );
 }
 

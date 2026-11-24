@@ -9,9 +9,10 @@ An Expo (React Native) app that reads RENPHO Bluetooth devices locally, with no 
 | ES-CS20M scale, TypeScript ports of both hardware variants (connectable QN, and broadcast-only for FCC ID 2APXUES-CS20M), tested against real captured frames | implemented; **not yet run on hardware** |
 | Beurer BF720 scale (standard Bluetooth profiles, real impedance), tested against another developer's captured frames | implemented; **not yet run on hardware** |
 | Apple Health sync (weight, body fat, lean mass, BMI, waist; write only, no duplicates) | implemented; **needs a new native build, not yet run on a device** |
+| SparkyFitness sync (own server, API key in the keychain, partial-failure aware) | implemented; **not yet tested against a live server** |
 | Weigh-in screen | minimal (weight + impedance) |
 | RF-BMF01 tape: protocol decoded, parser tested on real frames, live-length screen with save-on-checkmark | implemented; **not yet run in the app on hardware** |
-| iHealth KN-550BT blood-pressure cuff: protocol ported, tested on real captured frames; stored-reading import to history and Apple Health (BP correlation + heart rate) | implemented; **not yet run on hardware** |
+| iHealth KN-550BT blood-pressure cuff: protocol ported, tested on real captured frames; stored-reading import to history, Apple Health (BP correlation + heart rate) and SparkyFitness (custom measurements); mmHg/kPa display setting | implemented; **not yet run on hardware** |
 | Body-composition profile / history / settings | planned |
 | SparkyFitness sync | planned |
 | Apple Health sync | planned |

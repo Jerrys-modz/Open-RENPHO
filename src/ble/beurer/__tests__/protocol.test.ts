@@ -6,6 +6,7 @@ import {
   buildGender,
   buildHeight,
   buildRegisterNewUser,
+  parseSlotLink,
   parseBodyCompositionMeasurement,
   parseUcpResponse,
   parseWeightMeasurement,
@@ -118,5 +119,18 @@ describe('profile and clock writes', () => {
     expect(Array.from(buildGender('female'))).toEqual([1]);
     expect(Array.from(buildGender('male'))).toEqual([0]);
     expect(Buffer.from(buildHeight(170.4)).toString('hex')).toBe('aa00');
+  });
+});
+
+describe('parseSlotLink', () => {
+  it('accepts a slot 1-8 and a PIN of up to 4 digits', () => {
+    expect(parseSlotLink('1', '3907')).toEqual({ ok: true, userIndex: 1, consentCode: 3907 });
+    expect(parseSlotLink(' 8 ', '0042')).toEqual({ ok: true, userIndex: 8, consentCode: 42 });
+  });
+
+  it('rejects anything else with a reason', () => {
+    for (const [slot, pin] of [['0', '1234'], ['9', '1234'], ['a', '1234'], ['', '1234'], ['1', ''], ['1', '12345'], ['1', '12a4']]) {
+      expect(parseSlotLink(slot, pin).ok).toBe(false);
+    }
   });
 });

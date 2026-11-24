@@ -17,6 +17,8 @@ export interface WeighInHandlers {
   profile?: QnSessionOptions['profile'];
   /** The user's own profile, for scales that store it (Beurer). */
   userProfile?: UserProfile | null;
+  /** Protocol chatter for an on-screen debug log (Beurer). */
+  onDebug?: (line: string) => void;
 }
 
 export class QnScaleConnection {

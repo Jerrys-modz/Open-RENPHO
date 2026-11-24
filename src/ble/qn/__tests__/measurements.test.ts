@@ -1,5 +1,5 @@
 import type { UserProfile } from '@/domain/profile';
-import { weighInToMeasurements } from '../measurements';
+import { backfillDerived, weighInToMeasurements } from '../measurements';
 
 const PROFILE: UserProfile = { sex: 'male', birthDate: '1983-01-01', heightCm: 170, athlete: false };
 const types = (ms: { type: string }[]) => ms.map((m) => m.type);
@@ -11,7 +11,7 @@ describe('weighInToMeasurements', () => {
       { flavor: 'extended', weightKg: 74.95, bodyFat: 21, resistance1: 505, resistance2: 503 },
       123,
     );
-    expect(types(out)).toEqual(['weight', 'body_fat', 'impedance']);
+    expect(types(out)).toEqual(['weight', 'body_fat', 'fat_mass', 'impedance']);
     expect(new Set(out.map((m) => m.takenAt))).toEqual(new Set([123]));
   });
 
@@ -29,19 +29,30 @@ describe('weighInToMeasurements', () => {
       Date.UTC(2026, 9, 7),
       PROFILE,
     );
-    expect(types(out)).toEqual([
-      'weight',
-      'body_fat',
-      'bmi',
-      'body_water',
-      'skeletal_muscle',
-      'muscle_mass',
-      'fat_free_mass',
-      'bone_mass',
-      'protein',
-      'bmr',
-      'impedance',
-    ]);
+    expect([...types(out)].sort()).toEqual(
+      [
+        'weight',
+        'body_fat',
+        'fat_mass',
+        'muscle_percent',
+        'skeletal_muscle_mass',
+        'bone_percent',
+        'body_water_mass',
+        'protein_mass',
+        'bmi',
+        'body_water',
+        'skeletal_muscle',
+        'muscle_mass',
+        'fat_free_mass',
+        'bone_mass',
+        'protein',
+        'bmr',
+        'impedance',
+      ].sort(),
+    );
+    expect(get(out, 'fat_mass')).toBeCloseTo(15.74, 2); // 74.95 kg x 21%
+    expect(get(out, 'muscle_percent')).toBeCloseTo(((get(out, 'muscle_mass') ?? 0) / 74.95) * 100, 1);
+    expect(get(out, 'body_water_mass')).toBeCloseTo(((get(out, 'body_water') ?? 0) / 100) * 74.95, 1);
     expect(get(out, 'body_fat')).toBe(21);
     expect(get(out, 'bmi')).toBeCloseTo(25.9, 1); // 74.95 / 1.70^2
     expect(get(out, 'fat_free_mass')).toBeCloseTo(59.21, 1);
@@ -81,5 +92,38 @@ describe('weighInToMeasurements', () => {
       // Same inputs as the real golden (M 43y, 1.70 m, 74.95 kg) but with 500 ohm instead of 505: about 21%.
       expect(get(out, 'body_fat')).toBeCloseTo(21, 0);
     });
+  });
+});
+
+describe('backfillDerived', () => {
+  const old = [
+    { type: 'weight' as const, value: 100, takenAt: 5, source: 'qn-scale' },
+    { type: 'body_fat' as const, value: 25, takenAt: 5, source: 'qn-scale' },
+    { type: 'bmi' as const, value: 34.6, takenAt: 5, source: 'qn-scale' },
+    { type: 'weight' as const, value: 99, takenAt: 6, source: 'qn-scale' }, // no body fat, nothing to derive from
+    { type: 'circumference' as const, value: 90, takenAt: 7, source: 'rf-bmf01', site: 'waist' },
+  ];
+
+  it('adds body fat mass without a profile and the rest with one', () => {
+    const bare = backfillDerived(old, null);
+    expect(get(bare as never, 'fat_mass')).toBe(25);
+    expect(bare.some((m) => m.type === 'muscle_percent')).toBe(false);
+    const full = backfillDerived(old, PROFILE);
+    for (const t of ['fat_mass', 'muscle_percent', 'bone_percent', 'body_water_mass', 'protein_mass', 'skeletal_muscle_mass']) {
+      expect(full.filter((m) => m.type === t && m.takenAt === 5)).toHaveLength(1);
+    }
+    expect(full.every((m) => m.takenAt !== 6 || m.type === 'weight')).toBe(true);
+  });
+
+  it('never overwrites a stored value and is idempotent', () => {
+    const full = backfillDerived(old, PROFILE);
+    expect(full.filter((m) => m.type === 'bmi')).toHaveLength(1);
+    expect(get(full as never, 'bmi')).toBe(34.6);
+    expect(backfillDerived(full, PROFILE)).toBe(full);
+  });
+
+  it('returns the same array when nothing is missing', () => {
+    const list = [{ type: 'weight' as const, value: 1, takenAt: 1, source: 's' }];
+    expect(backfillDerived(list, PROFILE)).toBe(list);
   });
 });
