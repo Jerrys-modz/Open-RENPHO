@@ -1,6 +1,6 @@
 /**
  * react-native-ble-plx glue for Beurer BF720 scales. Protocol logic lives in session.ts; this file
- * connects, subscribes, and writes. Not verified on hardware yet (see docs/protocol/beurer-bf720.md).
+ * connects, subscribes, and writes. Verified on the owner's scale (see docs/protocol/beurer-bf720.md).
  */
 import type { Device, Subscription } from 'react-native-ble-plx';
 import { base64ToBytes, bytesToBase64 } from '../base64';

@@ -1,7 +1,7 @@
 # QN-series scale protocol (RENPHO ES-CS20M)
 
 Source: ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT).
-Not yet verified against our own scale. Verify with the capture steps below.
+Verified on the owner's scale. The capture steps below are for checking another unit.
 
 ## Which hardware revision do I have?
 
