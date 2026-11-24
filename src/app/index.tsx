@@ -131,6 +131,7 @@ export default function Overview() {
         <Button title="Weigh in" onPress={() => router.push('/scale')} />
         <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
       </View>
+      <Button title="Blood pressure" variant="secondary" onPress={() => router.push('/bp')} style={styles.historyButton} />
       {hasData && <Button title="History" variant="secondary" onPress={() => router.push('/history')} style={styles.historyButton} />}
     </ScrollView>
   );

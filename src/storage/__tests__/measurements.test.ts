@@ -100,3 +100,14 @@ describe('groupEntries and removeEntry', () => {
     expect(rest.some((m) => m.takenAt === 100)).toBe(false);
   });
 });
+
+describe('blood-pressure entries', () => {
+  it('groups systolic, diastolic and pulse of one reading as a single entry', () => {
+    const mk = (type: Measurement['type'], takenAt: number): Measurement => ({ type, value: 1, takenAt, source: 'ihealth-kn550bt' });
+    const entries = groupEntries([mk('bp_systolic', 1), mk('bp_diastolic', 1), mk('pulse', 1), mk('bp_systolic', 2)]);
+    expect(entries.map((e) => [e.kind, e.measurements.length])).toEqual([
+      ['blood-pressure', 1],
+      ['blood-pressure', 3],
+    ]);
+  });
+});

@@ -57,12 +57,14 @@ export function appendMeasurements(
 /** Everything that was saved in one go: a weigh-in (all its metrics) or a single tape reading. */
 export interface Entry {
   id: string;
-  kind: 'weigh-in' | 'tape';
+  kind: 'weigh-in' | 'tape' | 'blood-pressure';
   takenAt: number;
   measurements: Measurement[];
 }
 
-/** Newest first. Scale metrics sharing a source and timestamp are one weigh-in; each tape reading stands alone. */
+const BP_TYPES: ReadonlySet<string> = new Set(['bp_systolic', 'bp_diastolic', 'pulse']);
+
+/** Newest first. Scale metrics sharing a source and timestamp are one weigh-in, likewise a blood-pressure reading; each tape reading stands alone. */
 export function groupEntries(list: readonly Measurement[]): Entry[] {
   const byId = new Map<string, Entry>();
   for (const m of list) {
@@ -70,7 +72,10 @@ export function groupEntries(list: readonly Measurement[]): Entry[] {
     const id = tape ? idOf(m) : `${m.source}|${m.takenAt}`;
     const e = byId.get(id);
     if (e) e.measurements.push(m);
-    else byId.set(id, { id, kind: tape ? 'tape' : 'weigh-in', takenAt: m.takenAt, measurements: [m] });
+    else {
+      const kind = tape ? 'tape' : BP_TYPES.has(m.type) ? 'blood-pressure' : 'weigh-in';
+      byId.set(id, { id, kind, takenAt: m.takenAt, measurements: [m] });
+    }
   }
   return [...byId.values()].sort((a, b) => b.takenAt - a.takenAt);
 }

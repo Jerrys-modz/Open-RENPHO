@@ -14,7 +14,10 @@ export type MeasurementType =
   | 'bmi'
   | 'bmr' // kcal/day
   | 'impedance' // ohms
-  | 'circumference'; // cm; see `site`
+  | 'circumference' // cm; see `site`
+  | 'bp_systolic' // mmHg
+  | 'bp_diastolic' // mmHg
+  | 'pulse'; // beats per minute, from a blood-pressure cuff
 
 export interface Measurement {
   type: MeasurementType;

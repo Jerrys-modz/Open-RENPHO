@@ -31,3 +31,12 @@ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 ```
+
+## hass-ihealth-bp
+
+The iHealth KN-550BT protocol handling (`src/ble/ihealth/`: framing, XXTEA variant, authentication
+handshake, record format) is a TypeScript port of
+[hass-ihealth-bp](https://github.com/NickLD/hass-ihealth-bp) by NickLD, itself reverse engineered
+from the iHealth MyVitals app. The captured frames in `src/ble/ihealth/__tests__/` come from that
+project's tests. Its license is MIT; its copyright notice follows the upstream repository's LICENSE
+file, which should be copied here verbatim before this ships.

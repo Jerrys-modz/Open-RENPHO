@@ -19,7 +19,7 @@
       [
         "react-native-ble-plx",
         {
-          "bluetoothAlwaysPermission": "Open RENPHO connects to your RENPHO scale and tape measure over Bluetooth to read your measurements."
+          "bluetoothAlwaysPermission": "Open RENPHO connects to your RENPHO scale and tape measure, and your iHealth blood-pressure cuff, over Bluetooth to read your measurements."
         }
       ],
       "@react-native-community/datetimepicker",
@@ -28,7 +28,7 @@
         "@kingstinct/react-native-healthkit",
         {
           "NSHealthShareUsageDescription": "Open RENPHO only saves measurements to Apple Health. It does not read your health data.",
-          "NSHealthUpdateUsageDescription": "Open RENPHO saves your weight, body fat, lean mass, BMI and waist measurements to Apple Health.",
+          "NSHealthUpdateUsageDescription": "Open RENPHO saves your weight, body fat, lean mass, BMI, waist, blood pressure and pulse measurements to Apple Health.",
           "background": false
         }
       ]

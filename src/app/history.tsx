@@ -15,6 +15,15 @@ function summary(e: Entry, units: UnitSystem): { title: string; detail: string }
     const f = formatForDisplay(def, m.value, units);
     return { title: `${def.label} ${f.text} ${f.unit}`, detail: 'Tape measure' };
   }
+  if (e.kind === 'blood-pressure') {
+    const sys = e.measurements.find((m) => m.type === 'bp_systolic');
+    const dia = e.measurements.find((m) => m.type === 'bp_diastolic');
+    const pulse = e.measurements.find((m) => m.type === 'pulse');
+    return {
+      title: sys && dia ? `${Math.round(sys.value)}/${Math.round(dia.value)} mmHg` : 'Blood pressure',
+      detail: pulse ? `Pulse ${Math.round(pulse.value)} bpm` : 'Blood pressure',
+    };
+  }
   const weight = e.measurements.find((m) => m.type === 'weight');
   const fat = e.measurements.find((m) => m.type === 'body_fat');
   const w = weight ? formatForDisplay(metricById('weight'), weight.value, units) : null;
@@ -31,7 +40,7 @@ export default function HistoryScreen() {
 
   const confirmDelete = (e: Entry) =>
     Alert.alert(
-      e.kind === 'tape' ? 'Delete this measurement?' : 'Delete this weigh-in?',
+      e.kind === 'tape' ? 'Delete this measurement?' : e.kind === 'blood-pressure' ? 'Delete this reading?' : 'Delete this weigh-in?',
       `${formatDateTime(e.takenAt)}\nIt is removed from this app. Anything already sent to Apple Health stays there.`,
       [
         { text: 'Cancel', style: 'cancel' },

@@ -6,9 +6,12 @@ export type HealthIdentifier =
   | 'HKQuantityTypeIdentifierBodyFatPercentage'
   | 'HKQuantityTypeIdentifierLeanBodyMass'
   | 'HKQuantityTypeIdentifierBodyMassIndex'
-  | 'HKQuantityTypeIdentifierWaistCircumference';
+  | 'HKQuantityTypeIdentifierWaistCircumference'
+  | 'HKQuantityTypeIdentifierHeartRate'
+  | 'HKQuantityTypeIdentifierBloodPressureSystolic'
+  | 'HKQuantityTypeIdentifierBloodPressureDiastolic';
 
-export type HealthUnit = 'kg' | '%' | 'count' | 'm';
+export type HealthUnit = 'kg' | '%' | 'count' | 'm' | 'count/min';
 
 export interface HealthSample {
   identifier: HealthIdentifier;
@@ -26,6 +29,9 @@ export const HEALTH_WRITE_TYPES: readonly HealthIdentifier[] = [
   'HKQuantityTypeIdentifierLeanBodyMass',
   'HKQuantityTypeIdentifierBodyMassIndex',
   'HKQuantityTypeIdentifierWaistCircumference',
+  'HKQuantityTypeIdentifierHeartRate',
+  'HKQuantityTypeIdentifierBloodPressureSystolic',
+  'HKQuantityTypeIdentifierBloodPressureDiastolic',
 ];
 
 export const measurementKey = (m: Measurement): string => `${m.type}|${m.site ?? ''}|${m.takenAt}`;
@@ -50,9 +56,41 @@ export function toHealthSample(m: Measurement): HealthSample | null {
       return m.site === 'waist'
         ? { ...base, identifier: 'HKQuantityTypeIdentifierWaistCircumference', unit: 'm', value: m.value / 100 }
         : null;
+    case 'pulse':
+      return { ...base, identifier: 'HKQuantityTypeIdentifierHeartRate', unit: 'count/min', value: m.value };
     default:
-      return null;
+      return null; // blood pressure goes through pendingBloodPressure: HealthKit wants it as a pair
   }
+}
+
+/** One cuff reading as HealthKit stores it: systolic and diastolic together, in mmHg. */
+export interface BloodPressureSample {
+  systolic: number;
+  diastolic: number;
+  /** Unix ms. */
+  date: number;
+  /** The two measurement keys this covers, recorded as synced once it is written. */
+  keys: [string, string];
+}
+
+/** Readings with both halves present and neither already sent. A lone half is skipped, not guessed at. */
+export function pendingBloodPressure(all: readonly Measurement[], synced: ReadonlySet<string>): BloodPressureSample[] {
+  const sys = new Map<string, Measurement>();
+  const dia = new Map<string, Measurement>();
+  for (const m of all) {
+    const id = `${m.source}|${m.takenAt}`;
+    if (m.type === 'bp_systolic') sys.set(id, m);
+    else if (m.type === 'bp_diastolic') dia.set(id, m);
+  }
+  const out: BloodPressureSample[] = [];
+  for (const [id, s] of sys) {
+    const d = dia.get(id);
+    if (!d) continue;
+    const keys: [string, string] = [measurementKey(s), measurementKey(d)];
+    if (synced.has(keys[0]) && synced.has(keys[1])) continue;
+    out.push({ systolic: s.value, diastolic: d.value, date: s.takenAt, keys });
+  }
+  return out;
 }
 
 /** The samples still to write: mappable and not in `synced`. */

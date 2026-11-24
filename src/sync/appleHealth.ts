@@ -3,7 +3,7 @@
  * loads until the user turns this on, and so tests and non-iOS builds never touch it.
  */
 import { Platform } from 'react-native';
-import { HEALTH_WRITE_TYPES, type HealthSample } from './appleHealthMapping';
+import { HEALTH_WRITE_TYPES, type BloodPressureSample, type HealthSample } from './appleHealthMapping';
 
 const load = () => import('@kingstinct/react-native-healthkit');
 
@@ -44,6 +44,32 @@ export async function writeAppleHealthSamples(samples: readonly HealthSample[]):
     } catch (e) {
       failed += 1;
       console.warn('[health] could not save', s.identifier, e);
+    }
+  }
+  return { written, failed };
+}
+
+/** Writes each reading as a blood-pressure correlation, so Health shows it as one entry. */
+export async function writeAppleHealthBloodPressure(samples: readonly BloodPressureSample[]): Promise<WriteResult> {
+  const hk = await load();
+  const written: string[] = [];
+  let failed = 0;
+  for (const s of samples) {
+    try {
+      const d = new Date(s.date);
+      await hk.saveCorrelationSample(
+        'HKCorrelationTypeIdentifierBloodPressure',
+        [
+          { quantityType: 'HKQuantityTypeIdentifierBloodPressureSystolic', quantity: s.systolic, unit: 'mmHg', startDate: d, endDate: d },
+          { quantityType: 'HKQuantityTypeIdentifierBloodPressureDiastolic', quantity: s.diastolic, unit: 'mmHg', startDate: d, endDate: d },
+        ] as never,
+        d,
+        d,
+      );
+      written.push(...s.keys);
+    } catch (e) {
+      failed += 1;
+      console.warn('[health] could not save blood pressure', e);
     }
   }
   return { written, failed };
