@@ -62,7 +62,7 @@ export interface Entry {
   measurements: Measurement[];
 }
 
-const BP_TYPES: ReadonlySet<string> = new Set(['bp_systolic', 'bp_diastolic', 'pulse']);
+const BP_TYPES: ReadonlySet<string> = new Set(['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement']);
 
 /** Newest first. Scale metrics sharing a source and timestamp are one weigh-in, likewise a blood-pressure reading; each tape reading stands alone. */
 export function groupEntries(list: readonly Measurement[]): Entry[] {

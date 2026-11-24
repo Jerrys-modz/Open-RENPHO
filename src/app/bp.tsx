@@ -3,8 +3,10 @@ import { ScrollView, StyleSheet, Switch, View } from 'react-native';
 import { readingToMeasurements } from '@/ble/ihealth/measurements';
 import { CuffConnection } from '@/ble/ihealth/transport';
 import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
-import { usePressureUnit } from '@/storage/useSettings';
+import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { syncAll } from '@/sync';
+import { BP_CATEGORY_COLOR, BP_CATEGORY_LABEL, bpReadings, classifyBp } from '@/domain/bloodPressure';
+import { BloodPressureSummary } from '@/ui/BloodPressureSummary';
 import { Button, Card } from '@/ui/components';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatDateTime } from '@/util/format';
@@ -25,10 +27,9 @@ export default function BloodPressureScreen() {
 
   useEffect(() => () => void conn.current?.stop(), []);
 
-  const latest = list
-    .filter((m) => m.type === 'bp_systolic')
-    .sort((a, b) => b.takenAt - a.takenAt)[0];
-  const latestDia = latest && list.find((m) => m.type === 'bp_diastolic' && m.takenAt === latest.takenAt);
+  const readings = bpReadings(list);
+  const latest = readings[0];
+  const units = useUnits();
 
   const begin = () => {
     void conn.current?.stop();
@@ -66,16 +67,25 @@ export default function BloodPressureScreen() {
       <Card style={styles.hero}>
         <ThemedText subtle>{status}</ThemedText>
         <ThemedText style={styles.value}>
-          {latest && latestDia
-            ? `${formatForDisplay(BP_DEF, latest.value, 'metric', pressure).text}/${formatForDisplay(BP_DEF, latestDia.value, 'metric', pressure).text}`
+          {latest
+            ? `${formatForDisplay(BP_DEF, latest.systolic, units, pressure).text}/${formatForDisplay(BP_DEF, latest.diastolic, units, pressure).text}`
             : '--'}{' '}
           <ThemedText subtle style={styles.unit}>
             {pressure}
           </ThemedText>
         </ThemedText>
+        {latest && (
+          <ThemedText
+            style={[styles.category, { color: BP_CATEGORY_COLOR[classifyBp(latest.systolic, latest.diastolic)] }]}
+          >
+            {BP_CATEGORY_LABEL[classifyBp(latest.systolic, latest.diastolic)]}
+          </ThemedText>
+        )}
         {latest && <ThemedText subtle>{formatDateTime(latest.takenAt)}</ThemedText>}
         {battery !== null && <ThemedText subtle>Cuff battery {battery}%</ThemedText>}
       </Card>
+
+      <BloodPressureSummary readings={readings} units={units} pressure={pressure} showLatest={false} />
 
       {result && <ThemedText>{result}</ThemedText>}
       {error && <ThemedText style={styles.error}>{error}</ThemedText>}
@@ -105,6 +115,7 @@ const styles = StyleSheet.create({
   hero: { alignItems: 'center', gap: 4 },
   value: { fontSize: 44, fontWeight: '700' },
   unit: { fontSize: 18, fontWeight: '400' },
+  category: { fontSize: 15, fontWeight: '700' },
   error: { color: '#e53935' },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   hint: { fontSize: 13 },

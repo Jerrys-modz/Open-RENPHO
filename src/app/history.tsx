@@ -1,10 +1,12 @@
-import { Alert, FlatList, StyleSheet, View } from 'react-native';
+import { File, Paths } from 'expo-file-system';
+import { Alert, FlatList, Share, StyleSheet, View } from 'react-native';
 import { groupEntries, type Entry } from '@/storage/measurements';
 import { deleteEntry, useMeasurements } from '@/storage/useMeasurements';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card } from '@/ui/components';
 import { METRICS, metricById } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
+import { measurementsToCsv } from '@/util/csv';
 import { formatDateTime } from '@/util/format';
 import { formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
 
@@ -21,9 +23,14 @@ function summary(e: Entry, units: UnitSystem, pressure: PressureUnit): { title: 
     const sys = e.measurements.find((m) => m.type === 'bp_systolic');
     const dia = e.measurements.find((m) => m.type === 'bp_diastolic');
     const pulse = e.measurements.find((m) => m.type === 'pulse');
+    const notes = [
+      pulse ? `Pulse ${Math.round(pulse.value)} bpm` : 'Blood pressure',
+      e.measurements.some((m) => m.type === 'irregular_pulse') ? 'irregular pulse' : null,
+      e.measurements.some((m) => m.type === 'body_movement') ? 'movement' : null,
+    ].filter(Boolean);
     return {
       title: sys && dia ? `${formatForDisplay(BP_DEF, sys.value, units, pressure).text}/${formatForDisplay(BP_DEF, dia.value, units, pressure).text} ${pressure}` : 'Blood pressure',
-      detail: pulse ? `Pulse ${Math.round(pulse.value)} bpm` : 'Blood pressure',
+      detail: notes.join(' · '),
     };
   }
   const weight = e.measurements.find((m) => m.type === 'weight');
@@ -51,11 +58,26 @@ export default function HistoryScreen() {
       ],
     );
 
+  const exportCsv = async () => {
+    try {
+      const f = new File(Paths.cache, 'keel-export.csv');
+      if (f.exists) f.delete();
+      f.create();
+      f.write(measurementsToCsv(list));
+      await Share.share({ url: f.uri });
+    } catch (e) {
+      Alert.alert('Could not export', e instanceof Error ? e.message : String(e));
+    }
+  };
+
   return (
     <FlatList
       contentContainerStyle={styles.container}
       data={entries}
       keyExtractor={(e) => e.id}
+      ListHeaderComponent={
+        entries.length > 0 ? <Button title="Export CSV" variant="secondary" onPress={() => void exportCsv()} /> : null
+      }
       ListEmptyComponent={
         <ThemedText subtle style={styles.empty}>
           Nothing saved yet.

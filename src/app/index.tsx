@@ -7,6 +7,8 @@ import { latestWithDelta, seriesFor } from '@/storage/measurements';
 import { useMeasurements } from '@/storage/useMeasurements';
 import { useProfile } from '@/storage/useProfile';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
+import { bpReadings } from '@/domain/bloodPressure';
+import { BloodPressureSummary } from '@/ui/BloodPressureSummary';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
@@ -44,6 +46,7 @@ export default function Overview() {
   const series = seriesFor(list, def.key);
   const latest = latestWithDelta(list, def.key);
   const hasData = list.length > 0;
+  const bp = bpReadings(list);
 
   const weight = latestWithDelta(list, SCALE_METRICS[0].key);
   const scaleRows = SCALE_METRICS.flatMap((m) => {
@@ -122,6 +125,8 @@ export default function Overview() {
           </ThemedText>
         )}
       </Card>
+
+      <BloodPressureSummary readings={bp} units={units} pressure={pressure} linked />
 
       {!profile && (
         <Card>

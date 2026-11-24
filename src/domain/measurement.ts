@@ -24,7 +24,9 @@ export type MeasurementType =
   | 'circumference' // cm; see `site`
   | 'bp_systolic' // mmHg
   | 'bp_diastolic' // mmHg
-  | 'pulse'; // beats per minute, from a blood-pressure cuff
+  | 'pulse' // beats per minute, from a blood-pressure cuff
+  | 'irregular_pulse' // 1 when the cuff flagged the reading; stored only when set
+  | 'body_movement'; // 1 when the cuff saw movement during the reading; stored only when set
 
 export interface Measurement {
   type: MeasurementType;
