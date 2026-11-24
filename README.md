@@ -61,6 +61,13 @@ npx eas-cli@latest build --profile development --platform ios  # or a cloud buil
 
 Change `ios.bundleIdentifier` in `app.json` (currently `com.jerrysmodz.openrenpho`) to one that is yours before building under your own Apple developer account. Cloud builds use the profiles in `eas.json` (`npm run build:device`, `npm run build:testflight`, `npm run submit:testflight`); the "EAS build (manual)" GitHub workflow needs an `EXPO_TOKEN` repository secret.
 
+## Documentation
+
+- [Using your devices](docs/guides/devices.md), [syncing](docs/guides/sync.md) and [troubleshooting](docs/guides/troubleshooting.md)
+- [Privacy policy](PRIVACY.md)
+- [Contributing](CONTRIBUTING.md), [architecture](docs/architecture.md), [adding a device](docs/adding-a-device.md) and [security policy](SECURITY.md)
+- [Protocol notes](docs/protocol/) for every supported device
+
 ## Development
 
 ```bash
@@ -98,4 +105,4 @@ RENPHO, Beurer, iHealth and Apple Health are trademarks of their respective owne
 
 ## License
 
-See [LICENSE](LICENSE).
+See [LICENSE](LICENSE). Privacy: see [PRIVACY.md](PRIVACY.md).
