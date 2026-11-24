@@ -80,7 +80,7 @@ function commit(next: SyncState): void {
     try {
       const f = file();
       if (!f.exists) f.create();
-      f.write(JSON.stringify({ version: 1, ...next }));
+      f.writeSync(JSON.stringify({ version: 1, ...next }));
     } catch (e) {
       console.warn('[sync] could not save state', e);
     }

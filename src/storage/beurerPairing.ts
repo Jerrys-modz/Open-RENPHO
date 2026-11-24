@@ -22,7 +22,7 @@ export function saveBeurerPairing(p: BeurerPairing): void {
   try {
     const f = file();
     if (!f.exists) f.create();
-    f.write(JSON.stringify({ version: 1, ...p }));
+    f.writeSync(JSON.stringify({ version: 1, ...p }));
   } catch (e) {
     console.warn('[beurer] could not save pairing', e);
   }

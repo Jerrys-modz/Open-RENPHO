@@ -63,7 +63,7 @@ export default function HistoryScreen() {
       const f = new File(Paths.cache, 'keel-export.csv');
       if (f.exists) f.delete();
       f.create();
-      f.write(measurementsToCsv(list));
+      f.writeSync(measurementsToCsv(list));
       await Share.share({ url: f.uri });
     } catch (e) {
       Alert.alert('Could not export', e instanceof Error ? e.message : String(e));
@@ -76,7 +76,7 @@ export default function HistoryScreen() {
       data={entries}
       keyExtractor={(e) => e.id}
       ListHeaderComponent={
-        entries.length > 0 ? <Button title="Export CSV" variant="secondary" onPress={() => void exportCsv()} /> : null
+        entries.length > 0 ? <Button title="Export CSV" variant="secondary" onPress={() => void exportCsv()} /> : undefined
       }
       ListEmptyComponent={
         <ThemedText subtle style={styles.empty}>

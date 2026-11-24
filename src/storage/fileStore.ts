@@ -19,7 +19,7 @@ export function saveMeasurements(list: readonly Measurement[]): void {
   try {
     const f = file();
     if (!f.exists) f.create();
-    f.write(serialize(list));
+    f.writeSync(serialize(list));
   } catch (e) {
     console.warn('[store] could not save measurements', e);
   }
