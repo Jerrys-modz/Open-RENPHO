@@ -1,0 +1,40 @@
+name: Bug report
+description: Something in Keel does not work as expected
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: "1. Open Weigh in\n2. Step on the scale\n3. ..."
+  - type: dropdown
+    id: area
+    attributes:
+      label: Area
+      options: [Weigh in / scale, Tape measure, Blood pressure cuff, Apple Health sync, SparkyFitness sync, History / export, Profile / units, Other]
+    validations:
+      required: true
+  - type: input
+    id: device
+    attributes:
+      label: Device and model
+      description: "For Bluetooth problems: the scale, tape or cuff, and for the ES-CS20M the HVIN or FCC ID on the label."
+  - type: input
+    id: phone
+    attributes:
+      label: iPhone model and iOS version
+  - type: input
+    id: version
+    attributes:
+      label: Keel version or build
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots help. Please do not paste API keys or health data you want to keep private.

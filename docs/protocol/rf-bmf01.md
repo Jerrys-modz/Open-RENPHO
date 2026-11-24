@@ -1,8 +1,8 @@
 # RENPHO smart tape measure (RF-BMF01)
 
-**Status: unknown.** No public protocol documentation found. This file is the
-capture checklist; fill in the findings as you go and add fixtures to
-`src/ble/tape/__tests__/`.
+**Status: working.** The protocol was decoded from captures (see Findings below), the parser is tested
+on the real frames in `src/ble/tape/__tests__/`, and the app reads the tape on the owner's device. No public
+protocol documentation exists. The checklist below is kept for anyone capturing another unit.
 
 Related: DUC750 on CodeWithCJ/SparkyFitness is reverse-engineering the same
 device. Coordinate on the issue before duplicating effort.

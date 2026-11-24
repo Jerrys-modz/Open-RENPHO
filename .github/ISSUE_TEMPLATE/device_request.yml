@@ -1,0 +1,37 @@
+name: Support a new device
+description: Ask for a scale, tape or cuff that Keel does not support yet
+labels: [device]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        New devices need real Bluetooth captures. See [docs/adding-a-device.md](../blob/main/docs/adding-a-device.md). Requests with captures are far more likely to happen.
+  - type: input
+    id: device
+    attributes:
+      label: Device make and model
+    validations:
+      required: true
+  - type: input
+    id: ids
+    attributes:
+      label: Identifiers on the label
+      description: Model number, HVIN or FCC ID.
+  - type: textarea
+    id: what
+    attributes:
+      label: What should Keel read from it?
+      placeholder: weight, body fat, blood pressure, ...
+    validations:
+      required: true
+  - type: textarea
+    id: captures
+    attributes:
+      label: Bluetooth details you already have
+      description: Advertised name, service UUIDs, notification payloads (hex) with the true value shown on the device. nRF Connect output is ideal.
+  - type: checkboxes
+    id: help
+    attributes:
+      label: Can you help test?
+      options:
+        - label: I own this device and can test builds and make captures.

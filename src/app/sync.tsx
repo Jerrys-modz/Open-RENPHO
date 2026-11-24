@@ -100,7 +100,7 @@ export default function SyncScreen() {
           <ThemedText subtle style={styles.text}>
             {available === false
               ? 'Apple Health is not available on this device.'
-              : 'New weigh-ins and waist measurements are written automatically. Nothing is read back.'}
+              : 'New weigh-ins, waist measurements and blood pressure readings are written automatically. Nothing is read back.'}
           </ThemedText>
         </View>
         <Switch
@@ -111,8 +111,8 @@ export default function SyncScreen() {
       </Card>
 
       <ThemedText subtle style={styles.text}>
-        Sent: weight, body fat, lean (fat-free) mass, BMI and waist. Water, bone, protein, BMR and the other tape sites have no
-        Apple Health type, so they stay in this app.
+        Sent: weight, body fat, lean (fat-free) mass, BMI, waist, blood pressure and the cuff&apos;s pulse (as heart rate). Water, bone,
+        protein, BMR and the other tape sites have no Apple Health type, so they stay in this app.
       </ThemedText>
 
       {appleHealth.enabled && (
@@ -171,7 +171,8 @@ export default function SyncScreen() {
           </Card>
           <ThemedText subtle style={styles.text}>
             Sent: weight, body fat, muscle mass, bone mass, water %, BMR, and waist, hips and neck (other tape sites as custom
-            measurements). SparkyFitness keeps one value per day for each, so the last weigh-in of a day wins.
+            measurements), plus blood pressure and the cuff&apos;s pulse as custom measurements. SparkyFitness keeps one value per day
+            for its built-in fields, so the last weigh-in of a day wins.
           </ThemedText>
           <Button title={busy ? 'Syncing…' : 'Sync now'} onPress={() => void runSparky()} disabled={busy} style={styles.button} />
           <Button title="Disconnect" variant="secondary" onPress={() => void disconnectSparky()} disabled={busy} style={styles.button} />
