@@ -56,7 +56,7 @@ pass automatically.
 
 App Store Connect → TestFlight → Internal Testing → + → create a group (e.g. "Me") → tick
 *Enable automatic distribution* → add yourself. Install the TestFlight app on your iPhone,
-sign in with the same Apple ID, and install Open RENPHO.
+sign in with the same Apple ID, and install Keel.
 
 ## Faster iteration: a development build
 

@@ -1,6 +1,6 @@
-# Open RENPHO
+# Keel
 
-An Expo (React Native) app that reads RENPHO Bluetooth devices locally, with no RENPHO cloud account, and syncs to Apple Health and SparkyFitness.
+An Expo (React Native) app that reads Bluetooth scales, a tape measure and a blood-pressure cuff locally (RENPHO, Beurer and iHealth devices), with no manufacturer cloud account, and syncs to Apple Health and SparkyFitness.
 
 ## Status
 
@@ -45,4 +45,4 @@ src/app/             expo-router screens
 docs/protocol/       protocol notes and capture checklists
 ```
 
-Credit: the iHealth cuff protocol is ported from [hass-ihealth-bp](https://github.com/NickLD/hass-ihealth-bp) (MIT). The scale protocol and body-fat math are ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT), see `THIRD_PARTY_NOTICES.md`. Not affiliated with RENPHO.
+Credit: the iHealth cuff protocol is ported from [hass-ihealth-bp](https://github.com/NickLD/hass-ihealth-bp) (MIT). The scale protocol and body-fat math are ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT), see `THIRD_PARTY_NOTICES.md`. Not affiliated with RENPHO, Beurer or iHealth.
