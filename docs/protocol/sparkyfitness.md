@@ -3,7 +3,7 @@
 The app pushes readings to a self-hosted [SparkyFitness](https://github.com/CodeWithCJ/SparkyFitness) server
 with `POST {server}/api/health-data`. Sources: the
 [API reference](https://codewithcj.github.io/SparkyFitness/developer/api-reference/) and the server code
-(`SparkyFitnessServer/services/healthDataHandlers.ts`). **Not yet tested against a live server.**
+(`SparkyFitnessServer/services/healthDataHandlers.ts`). Tested against a live server.
 
 ## Request
 

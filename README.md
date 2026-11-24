@@ -1,48 +1,72 @@
 # Keel
 
-An Expo (React Native) app that reads Bluetooth scales, a tape measure and a blood-pressure cuff locally (RENPHO, Beurer and iHealth devices), with no manufacturer cloud account, and syncs to Apple Health and SparkyFitness.
+An Expo (React Native) iPhone app that reads Bluetooth scales, a tape measure and a blood-pressure cuff locally, with no manufacturer cloud account, keeps your history on the phone, and syncs to Apple Health and SparkyFitness.
+
+Not affiliated with RENPHO, Beurer or iHealth.
 
 ## Status
 
 | Piece | State |
 |---|---|
-| ES-CS20M scale, TypeScript ports of both hardware variants (connectable QN, and broadcast-only for FCC ID 2APXUES-CS20M), tested against real captured frames | implemented; **not yet run on hardware** |
-| Beurer BF720 scale (standard Bluetooth profiles, real impedance), tested against another developer's captured frames | implemented; **not yet run on hardware** |
-| Apple Health sync (weight, body fat, lean mass, BMI, waist; write only, no duplicates) | implemented; **needs a new native build, not yet run on a device** |
-| SparkyFitness sync (own server, API key in the keychain, partial-failure aware) | implemented; **not yet tested against a live server** |
-| Weigh-in screen | minimal (weight + impedance) |
-| RF-BMF01 tape: protocol decoded, parser tested on real frames, live-length screen with save-on-checkmark | implemented; **not yet run in the app on hardware** |
-| iHealth KN-550BT blood-pressure cuff: protocol ported, tested on real captured frames; stored-reading import to history, Apple Health (BP correlation + heart rate) and SparkyFitness (custom measurements); mmHg/kPa display setting | implemented; **not yet run on hardware** |
-| Body-composition profile / history / settings | planned |
-| SparkyFitness sync | planned |
-| Apple Health sync | planned |
+| RENPHO ES-CS20M scale, both hardware variants (connectable QN, and broadcast-only for FCC ID 2APXUES-CS20M) | works; tested on hardware |
+| Beurer BF720 scale (standard Bluetooth profiles, real impedance, user-slot pairing) | works; tested on hardware |
+| RENPHO RF-BMF01 tape measure (live length, save on checkmark) | works; tested on hardware |
+| Body-composition profile (BMI, water, muscle, bone, protein, BMR derived from your sex, age and height) | works; tested |
+| Overview, trend charts, History (delete, CSV export), units (lb/in or kg/cm, mmHg or kPa) | works; tested |
+| Apple Health sync (weight, body fat, lean mass, BMI, waist, blood pressure, heart rate; write only, no duplicates) | works; tested on a device |
+| SparkyFitness sync (own server, API key in the keychain, partial-failure aware) | works; tested against a live server |
+| iHealth KN-550BT blood-pressure cuff: stored-reading import, category and averages, flags | implemented, tested on real captured frames; **not yet run on the cuff** |
+
+The cuff is the only piece that hasn't been tried on real hardware. Its first-run checklist is at the end of [docs/protocol/ihealth-kn550bt.md](docs/protocol/ihealth-kn550bt.md).
+
+## What it does
+
+- **Weigh in:** weight and impedance from the scale, with body fat and the other metrics derived from your profile.
+- **Measure:** tape-measure readings for waist, hips, chest, neck, bicep, thigh and calf.
+- **Blood pressure:** syncs stored readings from an iHealth KN-550BT (systolic, diastolic, pulse, irregular-pulse and movement flags). The card shows the latest reading with its ACC/AHA category and 7 and 30 day averages. For information only, not medical advice. Clearing the cuff after import is optional and only happens after a complete, saved download.
+- **History:** every saved reading, deletable, exportable as CSV (always in kg, cm and mmHg).
+- **Sync:** Apple Health and SparkyFitness, each on its own screen, with "already sent" tracking so nothing is written twice. Blood pressure goes to Apple Health as one entry and to SparkyFitness as custom measurements.
+- **Units:** lb/in or kg/cm, and mmHg or kPa. These change the display only; everything is stored in kg, cm and mmHg.
+
+Data stays on your phone. The only network traffic is the sync to a SparkyFitness server you point it at.
 
 ## Running
 
 To get a build on your iPhone without a Mac, see [docs/TESTFLIGHT.md](docs/TESTFLIGHT.md).
 
-BLE needs native code, so **Expo Go will not work**. Use a development build on a real iPhone:
+BLE and HealthKit need native code, so **Expo Go will not work**. Use a development build on a real iPhone:
 
 ```bash
 npm install
 npx expo run:ios --device        # needs a Mac with Xcode, or:
 npx eas-cli@latest build --profile development --platform ios
-npm test                         # protocol + body-metrics tests, no hardware needed
+npm test                         # protocol, session and maths tests, no hardware needed
 npm run typecheck && npm run lint
 ```
 
-Before building, check `ios.bundleIdentifier` in `app.json`; it is a placeholder.
+`ios.bundleIdentifier` in `app.json` is still `com.jerrysmodz.openrenpho`; change it before shipping under your own Apple account (see the TestFlight doc).
+
+CI runs typecheck, lint, tests and `expo-doctor` on every PR. A separate workflow builds the app for the simulator and uploads light and dark screenshots (it uses demo data, since the simulator has no Bluetooth).
 
 ## Layout
 
 ```
-src/ble/beurer/      Beurer BF720: standard-profile parser, user-slot handshake, transport
-src/ble/ihealth/    iHealth KN-550BT cuff: XXTEA handshake, framing, readings, session, transport
-src/ble/qn/          scale protocol (pure TS), session state machine, body-composition math, BLE transport
-src/ble/base64.ts    ble-plx value encoding
-src/domain/          device-independent types (Measurement, UserProfile)
-src/app/             expo-router screens
-docs/protocol/       protocol notes and capture checklists
+src/app/             expo-router screens (overview, scale, tape, bp, history, profile, sync, capture)
+src/ble/qn/          RENPHO scale protocol (pure TS), session state machine, body-composition maths
+src/ble/aabb/        broadcast-only scale variant and the capture recorder
+src/ble/beurer/      Beurer BF720: standard-profile parser, user-slot handshake
+src/ble/tape/        RF-BMF01 tape measure
+src/ble/ihealth/     iHealth KN-550BT cuff: XXTEA handshake, framing, records, session
+src/domain/          device-independent types and logic (Measurement, UserProfile, blood pressure)
+src/storage/         local JSON storage, settings, sync state, keychain
+src/sync/            Apple Health and SparkyFitness mapping and clients
+src/ui/              shared components, theme, charts
+docs/protocol/       protocol notes, one per device, and the SparkyFitness API notes
 ```
 
-Credit: the iHealth cuff protocol is ported from [hass-ihealth-bp](https://github.com/NickLD/hass-ihealth-bp) (MIT). The scale protocol and body-fat math are ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT), see `THIRD_PARTY_NOTICES.md`. Not affiliated with RENPHO, Beurer or iHealth.
+## Credits
+
+- The RENPHO scale protocol and body-fat maths are ported from [renpho-escs20m](https://github.com/ronnnnnnnnnnnnn/renpho-escs20m) (MIT).
+- The iHealth cuff protocol is ported from [hass-ihealth-bp](https://github.com/NickLD/hass-ihealth-bp) (MIT).
+
+See `THIRD_PARTY_NOTICES.md`.

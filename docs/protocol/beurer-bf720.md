@@ -1,7 +1,7 @@
 # Beurer BF720
 
-Connectable scale using the standard Bluetooth SIG profiles. **Not yet verified on hardware by this
-project.** Everything below comes from another developer's captures of a real BF720
+Connectable scale using the standard Bluetooth SIG profiles. Tested on the owner's
+BF720. The protocol details below come from another developer's captures of a real BF720
 ([bascule](https://github.com/bearyjd/bascule), `docs/prp/03-hardware-validation.md`) plus the SIG
 specifications. The decoders are tested against those captured bytes
 (`src/ble/beurer/__tests__`).

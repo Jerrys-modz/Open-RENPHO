@@ -6,7 +6,7 @@
  * body composition comes from the scale itself.
  *
  * Ported from renpho-escs20m by Ron (MIT); the test frames are real captures from that
- * project. See THIRD_PARTY_NOTICES.md. Not yet verified on this app's hardware.
+ * project. See THIRD_PARTY_NOTICES.md. Verified on the owner's scale.
  */
 
 export const COMPANY_ID = 0xffff;
