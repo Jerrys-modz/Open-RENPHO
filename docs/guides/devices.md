@@ -43,6 +43,8 @@ Keel pairs, sets the cuff's clock to the phone's time, and downloads the stored 
 
 The **clear the cuff after importing** switch is off by default. When on, the cuff's memory is cleared only after every reading has been downloaded and saved in Keel. It cannot be undone.
 
+**Which arm, and sitting or standing.** The cuff does not know, so you tell Keel. On the **Blood pressure** screen, under *How you usually measure*, pick your usual arm (left or right) and position (sitting, standing or lying). They are applied to the new readings each sync imports. To correct a single reading, open **History**, tap **Edit** on it, and change its arm or position. A sync never overwrites a reading you already corrected, even though the cuff sends everything it holds again. Leave a field on *Not set* to record nothing.
+
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
 
 ## Units
@@ -51,4 +53,4 @@ On the profile screen you can choose lb/in or kg/cm, and mmHg or kPa for blood p
 
 ## History, deleting and exporting
 
-**History** lists every saved reading, newest first. **Delete** removes it from Keel only; anything already sent to Apple Health or SparkyFitness stays there. **Export CSV** shares one file with every measurement, oldest first, in kg, cm and mmHg.
+**History** lists every saved reading, newest first. **Delete** removes it from Keel only; anything already sent to Apple Health or SparkyFitness stays there. **Export CSV** shares one file with every measurement, oldest first, in kg, cm and mmHg. A blood-pressure reading's arm and position appear as their own rows (`bp_arm` with the side in the `site` column, `bp_position` likewise), sharing the reading's time.

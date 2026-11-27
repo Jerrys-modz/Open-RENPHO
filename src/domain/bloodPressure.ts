@@ -1,6 +1,44 @@
 import type { Measurement } from './measurement';
 
-export interface BpReading {
+export type BpArm = 'left' | 'right';
+export type BpPosition = 'sitting' | 'standing' | 'lying';
+
+/** What the user tells us about how a reading was taken. Null means not recorded. */
+export interface BpContext {
+  arm: BpArm | null;
+  position: BpPosition | null;
+}
+
+export const NO_BP_CONTEXT: BpContext = { arm: null, position: null };
+
+export const BP_ARM_LABEL: Record<BpArm, string> = { left: 'Left arm', right: 'Right arm' };
+export const BP_POSITION_LABEL: Record<BpPosition, string> = { sitting: 'Sitting', standing: 'Standing', lying: 'Lying down' };
+
+const isArm = (s: string | undefined): s is BpArm => s === 'left' || s === 'right';
+const isPosition = (s: string | undefined): s is BpPosition => s === 'sitting' || s === 'standing' || s === 'lying';
+
+/** "Left arm · sitting", or null when nothing was recorded. */
+export function bpContextText(c: BpContext): string | null {
+  const parts = [c.arm ? BP_ARM_LABEL[c.arm] : null, c.position ? BP_POSITION_LABEL[c.position].toLowerCase() : null].filter(Boolean);
+  return parts.length ? parts.join(' · ') : null;
+}
+
+/** The stored rows for a context: one row per field that is set, none for the rest. */
+export function bpContextMeasurements(source: string, takenAt: number, c: BpContext): Measurement[] {
+  const out: Measurement[] = [];
+  if (c.arm) out.push({ type: 'bp_arm', value: 1, takenAt, source, site: c.arm });
+  if (c.position) out.push({ type: 'bp_position', value: 1, takenAt, source, site: c.position });
+  return out;
+}
+
+/** The context held by a set of measurements (a reading's rows, or the whole list filtered to one reading). */
+export function bpContextOf(list: readonly Measurement[]): BpContext {
+  const arm = list.find((m) => m.type === 'bp_arm')?.site;
+  const position = list.find((m) => m.type === 'bp_position')?.site;
+  return { arm: isArm(arm) ? arm : null, position: isPosition(position) ? position : null };
+}
+
+export interface BpReading extends BpContext {
   takenAt: number;
   systolic: number;
   diastolic: number;
@@ -13,14 +51,16 @@ export interface BpReading {
 export function bpReadings(list: readonly Measurement[]): BpReading[] {
   const byId = new Map<string, Partial<BpReading> & { takenAt: number }>();
   for (const m of list) {
-    if (!['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement'].includes(m.type)) continue;
+    if (!['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement', 'bp_arm', 'bp_position'].includes(m.type)) continue;
     const id = `${m.source}|${m.takenAt}`;
     const r = byId.get(id) ?? { takenAt: m.takenAt };
     if (m.type === 'bp_systolic') r.systolic = m.value;
     else if (m.type === 'bp_diastolic') r.diastolic = m.value;
     else if (m.type === 'pulse') r.pulse = m.value;
     else if (m.type === 'irregular_pulse') r.irregularPulse = m.value > 0;
-    else r.bodyMovement = m.value > 0;
+    else if (m.type === 'body_movement') r.bodyMovement = m.value > 0;
+    else if (m.type === 'bp_arm') r.arm = isArm(m.site) ? m.site : null;
+    else r.position = isPosition(m.site) ? m.site : null;
     byId.set(id, r);
   }
   const out: BpReading[] = [];
@@ -33,6 +73,8 @@ export function bpReadings(list: readonly Measurement[]): BpReading[] {
       pulse: r.pulse ?? null,
       irregularPulse: r.irregularPulse === true,
       bodyMovement: r.bodyMovement === true,
+      arm: r.arm ?? null,
+      position: r.position ?? null,
     });
   }
   return out.sort((a, b) => b.takenAt - a.takenAt);

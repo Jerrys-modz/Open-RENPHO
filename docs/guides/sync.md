@@ -9,6 +9,8 @@ Open the sync screen with the circular-arrows button at the top right of the ove
 
 Keel only **writes** to Health and never reads from it. Sent: weight, body fat, lean (fat-free) mass, BMI, waist, blood pressure (as one entry with systolic and diastolic) and the cuff's pulse as heart rate. Water, bone mass, protein, BMR and the other tape sites have no Apple Health type, so they stay in Keel.
 
+**Arm and position.** Apple Health has no blood-pressure field for which arm or what position, and the Health app does not show them. Keel still attaches them to the entry as metadata that other apps and exports can read: Apple's own `HKDevicePlacementSide` key (left or right) and two Keel keys, `KeelBloodPressureArm` and `KeelBodyPosition`. If HealthKit ever refuses them, the reading is saved without them, so a reading never fails to sync because of this. Health entries cannot be edited, so correcting a reading's arm in History afterwards does not change an entry already sent. Set your usual arm and position before the first sync, or correct readings before they sync.
+
 If nothing appears in Health, check *Health → Sharing → Apps → Keel* and make sure the data types are on.
 
 ## SparkyFitness
@@ -20,7 +22,7 @@ You need your own [SparkyFitness](https://github.com/CodeWithCJ/SparkyFitness) s
 3. Tap **Connect**, which checks the key. After that, readings are sent automatically after each save, or tap **Sync now**.
 4. **Disconnect** removes the key and stops sending. Your readings in Keel are unchanged.
 
-What is sent:
+What is sent (arm and position are not sent to SparkyFitness, which has no field for them):
 
 - weight, body fat, muscle mass, bone mass, water %, BMR, and waist, hips and neck go to Sparky's built-in fields. Other tape sites go as custom measurements.
 - **Blood pressure** goes as the custom measurements `Blood Pressure Systolic` and `Blood Pressure Diastolic` (mmHg), and the cuff's pulse as `Pulse (cuff)` (bpm). They are created on your server the first time and are always sent.
