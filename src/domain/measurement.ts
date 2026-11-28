@@ -39,4 +39,6 @@ export interface Measurement {
   source: string;
   /** Body site for tape readings, e.g. "waist". */
   site?: string;
+  /** Whose reading this is. Absent means the primary person, so data saved before people existed still belongs to them. */
+  person?: string;
 }
