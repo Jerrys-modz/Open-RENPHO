@@ -44,12 +44,12 @@ server pairs the halves by `source` and the exact `timestamp`, so both carry the
 
 ```json
 { "type": "blood_pressure_systolic", "value": 125, "date": "2026-10-21", "timestamp": "2026-10-21T18:52:00.000Z",
-  "unit": "mmHg", "source": "keel", "pulse_bpm": 69, "arm": "left", "body_position": "sitting" }
+  "unit": "mmHg", "source": "keel", "pulse_bpm": 69, "arm": "left", "body_position": "sitting", "note": "After coffee" }
 ```
 
 (and `blood_pressure_diastolic` with its own `value`.) `pulse_bpm` (20 to 300), `arm` (`left` or `right`) and
-`body_position` (`sitting`, `standing`, `lying` or `reclining`) are optional and left out when not recorded.
-The server drops any other value without an error. Keel has no `reclining` or note field yet.
+`body_position` (`sitting`, `standing`, `lying` or `reclining`) and `note` (trimmed, at most 500 characters) are
+optional and left out when not recorded. The server drops any other value without an error.
 
 - `source` is `keel`. It is what the server normalises into the reading's provider, so it must be the same on both halves.
 - The server keeps the **first** arm, position and note stored for a reading, so correcting an arm in Keel after

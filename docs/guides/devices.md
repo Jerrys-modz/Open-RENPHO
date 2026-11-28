@@ -43,7 +43,11 @@ Keel pairs, sets the cuff's clock to the phone's time, and downloads the stored 
 
 The **clear the cuff after importing** switch is off by default. When on, the cuff's memory is cleared only after every reading has been downloaded and saved in Keel. It cannot be undone.
 
-**Which arm, and sitting or standing.** The cuff does not know, so you tell Keel. On the **Blood pressure** screen, under *How you usually measure*, pick your usual arm (left or right) and position (sitting, standing or lying). They are applied to the new readings each sync imports. To correct a single reading, open **History**, tap **Edit** on it, and change its arm or position. A sync never overwrites a reading you already corrected, even though the cuff sends everything it holds again. Leave a field on *Not set* to record nothing.
+**Which arm, sitting or standing, and a note.** The cuff does not know, so you tell Keel. On the **Blood pressure** screen, under *How you usually measure*, pick your usual arm (left or right) and position (sitting, standing, lying or reclining). They are applied to the new readings each sync imports. To correct a single reading, open **History**, tap **Edit** on it, and change its arm or position, or type a note (up to 500 characters, for example "after coffee"). A sync never overwrites a reading you already corrected, even though the cuff sends everything it holds again. Leave a field on *Not set* to record nothing.
+
+**Chart and averages.** The Blood pressure screen charts systolic and diastolic together, with the space between them shaded. Choose 7 days, 30 days, 90 days or All; the window ends at your newest reading. Press and drag on the chart to read a single reading. Below it are 7 and 30 day averages and the 30 day averages for readings before noon and from noon on (by the phone's clock).
+
+**A report for your doctor.** *Share report for your doctor* makes a PDF for the chosen period, with the summary (average, before-noon and noon-onward averages, highest and lowest, how many readings fall in each category) and a table of every reading with its arm, position, flags and notes. It is made on the phone and opens the iOS share sheet; nothing is uploaded. The pressures use your display unit (mmHg or kPa).
 
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
 

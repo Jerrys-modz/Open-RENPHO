@@ -151,6 +151,14 @@ describe('blood pressure to SparkyFitness', () => {
     }
   });
 
+  it('sends a note and the reclining position on both halves', () => {
+    const list = [...reading(), bp('bp_position', 1, 'reclining'), bp('bp_note', 1, 'After coffee')];
+    for (const i of pendingSparkyItems(list, new Set(), false)) {
+      expect(i.record).toMatchObject({ body_position: 'reclining', note: 'After coffee' });
+    }
+    expect(toSparkyItem(bp('bp_note', 1, 'After coffee'), true)).toBeNull();
+  });
+
   it('leaves arm and position out when none was recorded', () => {
     const [i] = pendingSparkyItems(reading(), new Set(), false);
     expect(i.record).toMatchObject({ pulse_bpm: 69 });
