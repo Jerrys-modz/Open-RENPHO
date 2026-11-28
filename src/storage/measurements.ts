@@ -63,7 +63,7 @@ export interface Entry {
   measurements: Measurement[];
 }
 
-const BP_TYPES: ReadonlySet<string> = new Set(['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement', 'bp_arm', 'bp_position']);
+const BP_TYPES: ReadonlySet<string> = new Set(['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement', 'bp_arm', 'bp_position', 'bp_note']);
 
 /** Newest first. Scale metrics sharing a source and timestamp are one weigh-in, likewise a blood-pressure reading; each tape reading stands alone. */
 export function groupEntries(list: readonly Measurement[]): Entry[] {
@@ -89,7 +89,7 @@ export function removeEntry(list: readonly Measurement[], entry: Entry): Measure
 
 /** Replaces the arm and position recorded for one cuff reading (null clears a field). Other rows are untouched. */
 export function withBpContext(list: readonly Measurement[], source: string, takenAt: number, c: BpContext): Measurement[] {
-  const isOld = (m: Measurement) => m.source === source && m.takenAt === takenAt && (m.type === 'bp_arm' || m.type === 'bp_position');
+  const isOld = (m: Measurement) => m.source === source && m.takenAt === takenAt && (m.type === 'bp_arm' || m.type === 'bp_position' || m.type === 'bp_note');
   return [...list.filter((m) => !isOld(m)), ...bpContextMeasurements(source, takenAt, c)];
 }
 

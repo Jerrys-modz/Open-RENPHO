@@ -117,20 +117,20 @@ describe('withBpContext', () => {
   const base = [cuff('bp_systolic', 120, 1), cuff('bp_diastolic', 80, 1), cuff('pulse', 60, 1), cuff('bp_systolic', 130, 2), cuff('bp_arm', 1, 2, 'left')];
 
   it('replaces one reading\'s arm and position without touching the others', () => {
-    const out = withBpContext(base, 'ihealth-kn550bt', 2, { arm: 'right', position: 'sitting' });
+    const out = withBpContext(base, 'ihealth-kn550bt', 2, { arm: 'right', position: 'sitting', note: null });
     expect(out.filter((x) => x.takenAt === 2 && x.type === 'bp_arm').map((x) => x.site)).toEqual(['right']);
     expect(out.filter((x) => x.takenAt === 2 && x.type === 'bp_position').map((x) => x.site)).toEqual(['sitting']);
     expect(out.filter((x) => x.takenAt === 1)).toEqual(base.filter((x) => x.takenAt === 1));
   });
 
   it('clears a field when it is set to null', () => {
-    const out = withBpContext(base, 'ihealth-kn550bt', 2, { arm: null, position: null });
+    const out = withBpContext(base, 'ihealth-kn550bt', 2, { arm: null, position: null, note: null });
     expect(out.some((x) => x.type === 'bp_arm' || x.type === 'bp_position')).toBe(false);
     expect(out.filter((x) => x.type === 'bp_systolic')).toHaveLength(2);
   });
 
   it('keeps arm and position in the reading\'s history entry', () => {
-    const entries = groupEntries(withBpContext(base, 'ihealth-kn550bt', 1, { arm: 'left', position: 'lying' }));
+    const entries = groupEntries(withBpContext(base, 'ihealth-kn550bt', 1, { arm: 'left', position: 'lying', note: null }));
     expect(entries.map((e) => e.kind)).toEqual(['blood-pressure', 'blood-pressure']);
     expect(entries.find((e) => e.takenAt === 1)?.measurements.map((x) => x.type)).toEqual(
       expect.arrayContaining(['bp_systolic', 'bp_arm', 'bp_position']),

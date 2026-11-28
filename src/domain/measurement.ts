@@ -28,7 +28,8 @@ export type MeasurementType =
   | 'irregular_pulse' // 1 when the cuff flagged the reading; stored only when set
   | 'body_movement' // 1 when the cuff saw movement during the reading; stored only when set
   | 'bp_arm' // 1; `site` is 'left' or 'right': the arm the cuff was on
-  | 'bp_position'; // 1; `site` is 'sitting', 'standing' or 'lying'
+  | 'bp_position' // 1; `site` is 'sitting', 'standing', 'lying' or 'reclining'
+  | 'bp_note'; // 1; `site` holds the note text (up to 500 characters)
 
 export interface Measurement {
   type: MeasurementType;

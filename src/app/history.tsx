@@ -1,7 +1,7 @@
 import { File, Paths } from 'expo-file-system';
 import { useState } from 'react';
-import { Alert, FlatList, Share, StyleSheet, View } from 'react-native';
-import { bpContextOf, bpContextText, type BpArm, type BpPosition } from '@/domain/bloodPressure';
+import { Alert, FlatList, Share, StyleSheet, TextInput, View } from 'react-native';
+import { BP_NOTE_MAX, bpContextOf, bpContextText, cleanBpNote, type BpArm, type BpPosition } from '@/domain/bloodPressure';
 import { groupEntries, type Entry } from '@/storage/measurements';
 import { deleteEntry, setBpContext, useMeasurements } from '@/storage/useMeasurements';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
@@ -9,6 +9,7 @@ import { Button, Card } from '@/ui/components';
 import { Segmented } from '@/ui/Segmented';
 import { METRICS, metricById } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
+import { useColors } from '@/ui/theme';
 import { measurementsToCsv } from '@/util/csv';
 import { formatDateTime } from '@/util/format';
 import { formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
@@ -29,6 +30,7 @@ function summary(e: Entry, units: UnitSystem, pressure: PressureUnit): { title: 
     const notes = [
       pulse ? `Pulse ${Math.round(pulse.value)} bpm` : 'Blood pressure',
       bpContextText(bpContextOf(e.measurements)),
+      bpContextOf(e.measurements).note,
       e.measurements.some((m) => m.type === 'irregular_pulse') ? 'irregular pulse' : null,
       e.measurements.some((m) => m.type === 'body_movement') ? 'movement' : null,
     ].filter(Boolean);
@@ -48,8 +50,10 @@ function summary(e: Entry, units: UnitSystem, pressure: PressureUnit): { title: 
 
 /** Arm and position for one cuff reading. Edits here do not change what Apple Health already holds. */
 function BpContextEditor({ entry }: { entry: Entry }) {
+  const c = useColors();
   const source = entry.measurements[0].source;
   const current = bpContextOf(entry.measurements);
+  const [note, setNote] = useState(current.note ?? '');
   return (
     <View style={styles.editor}>
       <Segmented<BpArm | null>
@@ -66,10 +70,21 @@ function BpContextEditor({ entry }: { entry: Entry }) {
           { value: 'sitting', label: 'Sitting' },
           { value: 'standing', label: 'Standing' },
           { value: 'lying', label: 'Lying' },
+          { value: 'reclining', label: 'Reclining' },
           { value: null, label: 'Not set' },
         ]}
         value={current.position}
         onChange={(position) => setBpContext(source, entry.takenAt, { ...current, position })}
+      />
+      <TextInput
+        value={note}
+        onChangeText={setNote}
+        onEndEditing={() => setBpContext(source, entry.takenAt, { ...current, note: cleanBpNote(note) })}
+        placeholder="Note (for example: after coffee)"
+        placeholderTextColor={c.subtext}
+        maxLength={BP_NOTE_MAX}
+        returnKeyType="done"
+        style={[styles.note, { color: c.text, borderColor: c.border, backgroundColor: c.background }]}
       />
       <ThemedText subtle style={styles.detail}>
         Readings already sent to Apple Health keep what they were sent with.
@@ -154,6 +169,7 @@ const styles = StyleSheet.create({
   card: { gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
   editor: { gap: 8 },
+  note: { borderWidth: StyleSheet.hairlineWidth, borderRadius: 12, padding: 12, fontSize: 15 },
   title: { fontSize: 17, fontWeight: '600' },
   detail: { fontSize: 13 },
   delete: { flex: 0, paddingHorizontal: 14 },
