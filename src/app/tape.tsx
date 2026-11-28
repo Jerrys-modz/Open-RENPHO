@@ -73,7 +73,7 @@ export default function TapeScreen() {
     .slice(0, 8);
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <Card style={styles.hero}>
         <ThemedText subtle style={styles.status}>
           {status}

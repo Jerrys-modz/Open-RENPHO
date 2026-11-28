@@ -92,7 +92,7 @@ export default function SyncScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <SectionTitle>Apple Health</SectionTitle>
       <Card style={styles.row}>
         <View style={{ flex: 1 }}>

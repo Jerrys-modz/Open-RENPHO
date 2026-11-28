@@ -61,6 +61,20 @@ export default function BloodPressureScreen() {
     }
   };
 
+  const chosen = RANGES.find((r) => r.value === range) ?? RANGES[1];
+  const inRange = readingsInWindow(readings, chosen.days);
+
+  const shareReport = async () => {
+    setSharing(true);
+    try {
+      await shareBpReport(inRange, pressure, chosen.text);
+    } catch (e) {
+      Alert.alert('Could not make the report', e instanceof Error ? e.message : String(e));
+    } finally {
+      setSharing(false);
+    }
+  };
+
   const begin = () => {
     void conn.current?.stop();
     conn.current = new CuffConnection();
@@ -93,7 +107,7 @@ export default function BloodPressureScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <Card style={styles.hero}>
         <ThemedText subtle>{status}</ThemedText>
         <ThemedText style={styles.value}>

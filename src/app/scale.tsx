@@ -72,7 +72,7 @@ export default function WeighInScreen() {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <Card style={styles.hero}>
         <ThemedText subtle style={styles.status}>
           {status}

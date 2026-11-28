@@ -36,7 +36,7 @@ export default function Overview() {
   const [showAll, setShowAll] = useState(false);
   const c = useColors();
 
-  if (demo === 'scale' || demo === 'tape' || demo === 'profile' || demo === 'capture') return <Redirect href={`/${demo}`} />;
+  if (demo !== null && demo !== 'home') return <Redirect href={`/${demo}`} />;
 
   // Collapsed: a handful of favourites (plus whatever is selected) so the row fits without scrolling.
   const chipList = showAll
@@ -62,7 +62,7 @@ export default function Overview() {
   });
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <View style={styles.actions}>
         <Button title="Weigh in" onPress={() => router.push('/scale')} />
         <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
