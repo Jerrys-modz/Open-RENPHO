@@ -9,6 +9,8 @@ import { useProfile } from '@/storage/useProfile';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { bpReadings } from '@/domain/bloodPressure';
 import { BloodPressureSummary } from '@/ui/BloodPressureSummary';
+import { GoalCard } from '@/ui/GoalCard';
+import { useGoals } from '@/storage/useGoals';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
@@ -29,6 +31,7 @@ export default function Overview() {
   const profile = useProfile();
   const units = useUnits();
   const pressure = usePressureUnit();
+  const goals = useGoals();
   const [selected, setSelected] = useState('weight');
   const [showAll, setShowAll] = useState(false);
   const c = useColors();
@@ -125,6 +128,8 @@ export default function Overview() {
           </ThemedText>
         )}
       </Card>
+
+      {goals.weight && weight && <GoalCard goal={goals.weight} currentKg={weight.point.v} units={units} />}
 
       <BloodPressureSummary readings={bp} units={units} pressure={pressure} linked />
 

@@ -9,7 +9,7 @@ Keel is built so that your health data stays with you. In short: **there is no K
 Everything below is kept on your phone, in the app's private storage:
 
 - your measurements (weight, body composition, tape measurements, blood pressure, pulse) and, for blood pressure, the arm, position and note you record,
-- your profile (sex, birth date, height, athlete mode) and display settings,
+- your profile (sex, birth date, height, athlete mode), your goals and display settings,
 - sync bookkeeping (which readings were already sent, so none are sent twice),
 - the Beurer scale user slot and PIN, if you use that scale,
 - your SparkyFitness server address, if you connect one. The API key is stored in the iOS keychain.

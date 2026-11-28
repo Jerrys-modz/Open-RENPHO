@@ -2,11 +2,15 @@ import { File, Paths } from 'expo-file-system';
 import type { WeighIn } from '@/ble/qn/session';
 import { deriveBodyMetrics } from '@/ble/qn/bodyMetrics';
 import type { Measurement } from '@/domain/measurement';
+import type { Goals } from '@/domain/goals';
 import type { UserProfile } from '@/domain/profile';
 
 export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile' | 'capture' | 'bp' | 'history';
 
 const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile', 'capture', 'bp', 'history'];
+
+/** Sample goals for the CI screenshots: a weight a little below the demo history, and the usual blood-pressure target. */
+export const DEMO_GOALS: Goals = { weight: { targetKg: 72.6, startKg: 80.6 }, bp: { systolic: 130, diastolic: 80 } };
 
 export const DEMO_PROFILE: UserProfile = { sex: 'male', birthDate: '1983-03-14', heightCm: 178, athlete: false };
 
