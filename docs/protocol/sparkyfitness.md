@@ -29,12 +29,34 @@ with `POST {server}/api/health-data`. Sources: the
 | BMR | `bmr` | kcal (server rejects values outside its plausible range) |
 | waist, hips, neck | `waist`, `hips`, `neck` | cm |
 | other tape sites | `Chest`, `Bicep`, ... (custom) | cm |
-| blood pressure | `Blood Pressure Systolic`, `Blood Pressure Diastolic` (custom, always sent) | mmHg |
-| cuff pulse | `Pulse (cuff)` (custom, always sent; kept apart from Sparky's own `heart_rate`) | bpm |
+| blood pressure | `blood_pressure_systolic`, `blood_pressure_diastolic` (always sent; see below) | mmHg |
 | BMI, fat-free mass, skeletal muscle, protein, impedance | custom; only if "extra metrics" is on | kg / % / ohm |
 
 Notes from the server code: `LeanBodyMass`, `body_water` and `BodyFat` are *not* built in (they become custom),
 which is why we use `body_water_percentage` and `body_fat`.
+
+## Blood pressure
+
+Needs a SparkyFitness server with blood-pressure support (the `blood_pressure_systolic` and
+`blood_pressure_diastolic` sync types, which write to `vitals_entries`). Each half is its own record, and the
+server pairs the halves by `source` and the exact `timestamp`, so both carry the same two. Keel sends, on
+**both** halves:
+
+```json
+{ "type": "blood_pressure_systolic", "value": 125, "date": "2026-10-21", "timestamp": "2026-10-21T18:52:00.000Z",
+  "unit": "mmHg", "source": "keel", "pulse_bpm": 69, "arm": "left", "body_position": "sitting" }
+```
+
+(and `blood_pressure_diastolic` with its own `value`.) `pulse_bpm` (20 to 300), `arm` (`left` or `right`) and
+`body_position` (`sitting`, `standing`, `lying` or `reclining`) are optional and left out when not recorded.
+The server drops any other value without an error. Keel has no `reclining` or note field yet.
+
+- `source` is `keel`. It is what the server normalises into the reading's provider, so it must be the same on both halves.
+- The server keeps the **first** arm, position and note stored for a reading, so correcting an arm in Keel after
+  the reading was sent does not change it in Sparky (Keel does not resend sent readings anyway).
+- Pulse has no type of its own: it travels on the blood-pressure records.
+- Readings sent before Keel switched to these types stay in Sparky as the custom measurements
+  `Blood Pressure Systolic`, `Blood Pressure Diastolic` and `Pulse (cuff)`.
 
 ## Behaviour
 

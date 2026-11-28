@@ -22,10 +22,10 @@ You need your own [SparkyFitness](https://github.com/CodeWithCJ/SparkyFitness) s
 3. Tap **Connect**, which checks the key. After that, readings are sent automatically after each save, or tap **Sync now**.
 4. **Disconnect** removes the key and stops sending. Your readings in Keel are unchanged.
 
-What is sent (arm and position are not sent to SparkyFitness, which has no field for them):
+What is sent:
 
 - weight, body fat, muscle mass, bone mass, water %, BMR, and waist, hips and neck go to Sparky's built-in fields. Other tape sites go as custom measurements.
-- **Blood pressure** goes as the custom measurements `Blood Pressure Systolic` and `Blood Pressure Diastolic` (mmHg), and the cuff's pulse as `Pulse (cuff)` (bpm). They are created on your server the first time and are always sent.
+- **Blood pressure** goes through SparkyFitness's blood-pressure sync (systolic, diastolic, pulse, and the arm and position you recorded), so it needs a SparkyFitness version with blood-pressure support. Readings Keel sent earlier stay in Sparky as the custom measurements `Blood Pressure Systolic`, `Blood Pressure Diastolic` and `Pulse (cuff)`. Sparky keeps the first arm and position it receives for a reading, so correcting them in Keel afterwards does not change an already-sent reading.
 - With **Also send extra metrics** on, BMI, fat-free mass, skeletal muscle, protein and impedance are sent as custom measurements too.
 
 SparkyFitness keeps **one value per day** in its built-in fields, so the last weigh-in of a day wins there. Custom measurements such as blood pressure keep their time, so each cuff reading is kept.

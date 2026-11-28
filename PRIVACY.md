@@ -26,7 +26,7 @@ If you turn it on, Keel **writes** measurements to Apple Health (weight, body fa
 
 ## SparkyFitness (optional)
 
-If you connect a SparkyFitness server, Keel sends your readings (values, dates and times) and your API key to **the server address you entered**, which you or someone you trust runs. That server's operator can see the data. Keel contacts no other server. Disconnecting stops all sending.
+If you connect a SparkyFitness server, Keel sends your readings (values, dates and times, and for blood pressure the arm and position you recorded) and your API key to **the server address you entered**, which you or someone you trust runs. That server's operator can see the data. Keel contacts no other server. Disconnecting stops all sending.
 
 ## Exporting
 
