@@ -166,6 +166,7 @@ export default function ProfileScreen() {
       ))}
 
       <Button title="Save profile" onPress={save} style={styles.button} />
+      <Button title="Reminders" variant="secondary" onPress={() => router.push('/reminders')} style={styles.button} />
       <SectionTitle>Beurer scale user</SectionTitle>
       {pairing && (
         <Card style={styles.athlete}>
