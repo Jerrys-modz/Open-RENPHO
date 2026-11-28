@@ -61,7 +61,7 @@ export default function ProfileScreen() {
   const input = [styles.input, { color: c.text, borderColor: c.border, backgroundColor: c.background }];
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
       <ThemedText subtle style={styles.intro}>
         Your scale reports your weight. Body fat and everything derived from it (BMI, water, muscle, bone, BMR) is
         calculated from your sex, age and height. This stays on your phone.

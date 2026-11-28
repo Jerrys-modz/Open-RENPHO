@@ -109,6 +109,7 @@ export default function HistoryScreen() {
 
   return (
     <FlatList
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={styles.container}
       data={entries}
       keyExtractor={(e) => e.id}

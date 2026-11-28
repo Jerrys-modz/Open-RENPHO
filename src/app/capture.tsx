@@ -74,7 +74,7 @@ export default function CaptureScreen() {
   const varied = rec.variedBytes();
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <ThemedText subtle style={styles.intro}>
         For the broadcast-only scale. It records every packet the scale sends during a weigh-in so we can see which bytes
         change with what you do, for example whether anything reacts to bare feet versus socks. Nothing is sent anywhere
