@@ -1,33 +1,53 @@
 import type { Measurement } from './measurement';
 
 export type BpArm = 'left' | 'right';
-export type BpPosition = 'sitting' | 'standing' | 'lying';
+export type BpPosition = 'sitting' | 'standing' | 'lying' | 'reclining';
+
+/** Longest note SparkyFitness keeps. */
+export const BP_NOTE_MAX = 500;
 
 /** What the user tells us about how a reading was taken. Null means not recorded. */
 export interface BpContext {
   arm: BpArm | null;
   position: BpPosition | null;
+  note: string | null;
 }
 
-export const NO_BP_CONTEXT: BpContext = { arm: null, position: null };
+/** The part of a context that makes sense as a default for new readings. */
+export type BpDefaults = Pick<BpContext, 'arm' | 'position'>;
+
+export const NO_BP_CONTEXT: BpContext = { arm: null, position: null, note: null };
 
 export const BP_ARM_LABEL: Record<BpArm, string> = { left: 'Left arm', right: 'Right arm' };
-export const BP_POSITION_LABEL: Record<BpPosition, string> = { sitting: 'Sitting', standing: 'Standing', lying: 'Lying down' };
+export const BP_POSITION_LABEL: Record<BpPosition, string> = {
+  sitting: 'Sitting',
+  standing: 'Standing',
+  lying: 'Lying down',
+  reclining: 'Reclining',
+};
 
 const isArm = (s: string | undefined): s is BpArm => s === 'left' || s === 'right';
-const isPosition = (s: string | undefined): s is BpPosition => s === 'sitting' || s === 'standing' || s === 'lying';
+const isPosition = (s: string | undefined): s is BpPosition => s === 'sitting' || s === 'standing' || s === 'lying' || s === 'reclining';
+
+/** A note as stored: trimmed and cut to the limit; null when empty. */
+export function cleanBpNote(s: string | null | undefined): string | null {
+  const t = (s ?? '').trim().slice(0, BP_NOTE_MAX);
+  return t === '' ? null : t;
+}
 
 /** "Left arm · sitting", or null when nothing was recorded. */
-export function bpContextText(c: BpContext): string | null {
+export function bpContextText(c: BpDefaults): string | null {
   const parts = [c.arm ? BP_ARM_LABEL[c.arm] : null, c.position ? BP_POSITION_LABEL[c.position].toLowerCase() : null].filter(Boolean);
   return parts.length ? parts.join(' · ') : null;
 }
 
 /** The stored rows for a context: one row per field that is set, none for the rest. */
 export function bpContextMeasurements(source: string, takenAt: number, c: BpContext): Measurement[] {
+  const note = cleanBpNote(c.note);
   const out: Measurement[] = [];
   if (c.arm) out.push({ type: 'bp_arm', value: 1, takenAt, source, site: c.arm });
   if (c.position) out.push({ type: 'bp_position', value: 1, takenAt, source, site: c.position });
+  if (note) out.push({ type: 'bp_note', value: 1, takenAt, source, site: note });
   return out;
 }
 
@@ -35,7 +55,8 @@ export function bpContextMeasurements(source: string, takenAt: number, c: BpCont
 export function bpContextOf(list: readonly Measurement[]): BpContext {
   const arm = list.find((m) => m.type === 'bp_arm')?.site;
   const position = list.find((m) => m.type === 'bp_position')?.site;
-  return { arm: isArm(arm) ? arm : null, position: isPosition(position) ? position : null };
+  const note = list.find((m) => m.type === 'bp_note')?.site;
+  return { arm: isArm(arm) ? arm : null, position: isPosition(position) ? position : null, note: cleanBpNote(note) };
 }
 
 export interface BpReading extends BpContext {
@@ -51,7 +72,7 @@ export interface BpReading extends BpContext {
 export function bpReadings(list: readonly Measurement[]): BpReading[] {
   const byId = new Map<string, Partial<BpReading> & { takenAt: number }>();
   for (const m of list) {
-    if (!['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement', 'bp_arm', 'bp_position'].includes(m.type)) continue;
+    if (!['bp_systolic', 'bp_diastolic', 'pulse', 'irregular_pulse', 'body_movement', 'bp_arm', 'bp_position', 'bp_note'].includes(m.type)) continue;
     const id = `${m.source}|${m.takenAt}`;
     const r = byId.get(id) ?? { takenAt: m.takenAt };
     if (m.type === 'bp_systolic') r.systolic = m.value;
@@ -60,7 +81,8 @@ export function bpReadings(list: readonly Measurement[]): BpReading[] {
     else if (m.type === 'irregular_pulse') r.irregularPulse = m.value > 0;
     else if (m.type === 'body_movement') r.bodyMovement = m.value > 0;
     else if (m.type === 'bp_arm') r.arm = isArm(m.site) ? m.site : null;
-    else r.position = isPosition(m.site) ? m.site : null;
+    else if (m.type === 'bp_position') r.position = isPosition(m.site) ? m.site : null;
+    else r.note = cleanBpNote(m.site);
     byId.set(id, r);
   }
   const out: BpReading[] = [];
@@ -75,6 +97,7 @@ export function bpReadings(list: readonly Measurement[]): BpReading[] {
       bodyMovement: r.bodyMovement === true,
       arm: r.arm ?? null,
       position: r.position ?? null,
+      note: r.note ?? null,
     });
   }
   return out.sort((a, b) => b.takenAt - a.takenAt);
@@ -121,6 +144,7 @@ export function averageBp(readings: readonly BpReading[], days: number): BpAvera
   if (readings.length === 0) return null;
   const newest = Math.max(...readings.map((r) => r.takenAt));
   const inWindow = readings.filter((r) => r.takenAt > newest - days * DAY);
+  if (inWindow.length === 0) return null;
   const mean = (xs: number[]) => Math.round(xs.reduce((a, b) => a + b, 0) / xs.length);
   const pulses = inWindow.flatMap((r) => (r.pulse === null ? [] : [r.pulse]));
   return {
@@ -129,4 +153,41 @@ export function averageBp(readings: readonly BpReading[], days: number): BpAvera
     pulse: pulses.length ? mean(pulses) : null,
     count: inWindow.length,
   };
+}
+
+const startOfWindow = (readings: readonly BpReading[], days: number): number =>
+  Math.max(...readings.map((r) => r.takenAt)) - days * DAY;
+
+/** The readings in the `days` up to and including the newest one, oldest first. */
+export function readingsInWindow(readings: readonly BpReading[], days: number | null): BpReading[] {
+  if (readings.length === 0) return [];
+  const from = days === null ? -Infinity : startOfWindow(readings, days);
+  return readings.filter((r) => r.takenAt > from).sort((a, b) => a.takenAt - b.takenAt);
+}
+
+/** Before noon and from noon on, by the phone's local time. Home-monitoring advice compares the two. */
+export function averageByPartOfDay(
+  readings: readonly BpReading[],
+  days: number,
+): { morning: BpAverage | null; evening: BpAverage | null } {
+  const inWindow = readingsInWindow(readings, days);
+  const part = (keep: (hour: number) => boolean) => averageBp(inWindow.filter((r) => keep(new Date(r.takenAt).getHours())), days);
+  return { morning: part((h) => h < 12), evening: part((h) => h >= 12) };
+}
+
+export interface BpStats {
+  count: number;
+  highest: BpReading;
+  lowest: BpReading;
+  /** How many readings fall in each category. */
+  categories: Record<BpCategory, number>;
+}
+
+/** Extremes (by systolic) and category counts, or null with no readings. */
+export function bpStats(readings: readonly BpReading[]): BpStats | null {
+  if (readings.length === 0) return null;
+  const categories: Record<BpCategory, number> = { normal: 0, elevated: 0, stage1: 0, stage2: 0, crisis: 0 };
+  for (const r of readings) categories[classifyBp(r.systolic, r.diastolic)] += 1;
+  const bySystolic = [...readings].sort((a, b) => a.systolic - b.systolic || a.diastolic - b.diastolic);
+  return { count: readings.length, highest: bySystolic[bySystolic.length - 1], lowest: bySystolic[0], categories };
 }

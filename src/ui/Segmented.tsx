@@ -42,6 +42,13 @@ export function Segmented<T extends string | null>({
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', gap: 8 },
-  item: { flex: 1, alignItems: 'center', paddingVertical: 10, borderRadius: 12, borderWidth: StyleSheet.hairlineWidth },
+  row: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  item: {
+    flexGrow: 1,
+    flexBasis: '30%',
+    alignItems: 'center',
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: StyleSheet.hairlineWidth,
+  },
 });

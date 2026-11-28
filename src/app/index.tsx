@@ -9,6 +9,8 @@ import { useProfile } from '@/storage/useProfile';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { bpReadings } from '@/domain/bloodPressure';
 import { BloodPressureSummary } from '@/ui/BloodPressureSummary';
+import { GoalCard } from '@/ui/GoalCard';
+import { useGoals } from '@/storage/useGoals';
 import { Button, Card, MetricIcon, MetricRow, SectionTitle } from '@/ui/components';
 import { METRICS, SCALE_METRICS, TAPE_METRICS, metricById, type MetricDef } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
@@ -16,6 +18,7 @@ import { ThemedText } from '@/ui/ThemedText';
 import { TrendChart } from '@/ui/TrendChart';
 import { formatDateTime, formatShortDate } from '@/util/format';
 import { convertValue, formatDeltaForDisplay, formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
+import { PersonNote } from '@/ui/PersonNote';
 
 /** Shown when the chip list is collapsed. */
 const PRIMARY_IDS = ['weight', 'body_fat', 'bmi', 'muscle_mass', 'waist'];
@@ -29,6 +32,7 @@ export default function Overview() {
   const profile = useProfile();
   const units = useUnits();
   const pressure = usePressureUnit();
+  const goals = useGoals();
   const [selected, setSelected] = useState('weight');
   const [showAll, setShowAll] = useState(false);
   const c = useColors();
@@ -60,6 +64,7 @@ export default function Overview() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <PersonNote prefix="Viewing" />
       <View style={styles.actions}>
         <Button title="Weigh in" onPress={() => router.push('/scale')} />
         <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />
@@ -125,6 +130,8 @@ export default function Overview() {
           </ThemedText>
         )}
       </Card>
+
+      {goals.weight && weight && <GoalCard goal={goals.weight} currentKg={weight.point.v} units={units} />}
 
       <BloodPressureSummary readings={bp} units={units} pressure={pressure} linked />
 

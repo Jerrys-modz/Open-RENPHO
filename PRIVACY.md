@@ -8,8 +8,8 @@ Keel is built so that your health data stays with you. In short: **there is no K
 
 Everything below is kept on your phone, in the app's private storage:
 
-- your measurements (weight, body composition, tape measurements, blood pressure, pulse) and, for blood pressure, the arm and position you record,
-- your profile (sex, birth date, height, athlete mode) and display settings,
+- your measurements (weight, body composition, tape measurements, blood pressure, pulse) and, for blood pressure, the arm, position and note you record,
+- your profile (sex, birth date, height, athlete mode), your goals and display settings, and if you add more people, their names and each person's own data,
 - sync bookkeeping (which readings were already sent, so none are sent twice),
 - the Beurer scale user slot and PIN, if you use that scale,
 - your SparkyFitness server address, if you connect one. The API key is stored in the iOS keychain.
@@ -22,15 +22,15 @@ Keel uses Bluetooth to find and read your scale, tape measure and blood-pressure
 
 ## Apple Health
 
-If you turn it on, Keel **writes** measurements to Apple Health (weight, body fat, lean mass, BMI, waist, blood pressure and heart rate). A blood-pressure entry also carries the arm and position you recorded, as metadata. It does **not read** anything from Apple Health. You choose what Keel may write in the permission sheet and can change it any time in the Health app under *Sharing → Apps → Keel*. Once data is in Apple Health, Apple's policies and your Health settings apply to it.
+If you turn it on, Keel **writes** the first person's measurements to Apple Health (weight, body fat, lean mass, BMI, waist, blood pressure and heart rate). A blood-pressure entry also carries the arm and position you recorded, as metadata. It does **not read** anything from Apple Health. You choose what Keel may write in the permission sheet and can change it any time in the Health app under *Sharing → Apps → Keel*. Once data is in Apple Health, Apple's policies and your Health settings apply to it.
 
 ## SparkyFitness (optional)
 
-If you connect a SparkyFitness server, Keel sends your readings (values, dates and times, and for blood pressure the arm and position you recorded) and your API key to **the server address you entered**, which you or someone you trust runs. That server's operator can see the data. Keel contacts no other server. Disconnecting stops all sending.
+If you connect a SparkyFitness server, Keel sends your readings (values, dates and times, and for blood pressure the arm, position and note you recorded) and your API key to **the server address you entered**, which you or someone you trust runs. That server's operator can see the data. Keel contacts no other server. Disconnecting stops all sending.
 
 ## Exporting
 
-*History → Export CSV* creates a file of all your measurements and opens the iOS share sheet. Where it goes is up to you.
+*History → Export CSV* creates a file of all your measurements, and *Share report for your doctor* on the blood-pressure screen creates a PDF of your readings. Both are made on your phone and open the iOS share sheet. Where they go is up to you.
 
 ## Children
 

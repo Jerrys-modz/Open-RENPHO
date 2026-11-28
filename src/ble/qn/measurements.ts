@@ -1,5 +1,6 @@
 import { ageOn, type UserProfile } from '@/domain/profile';
 import type { Measurement } from '@/domain/measurement';
+import { forPerson, measurementsOf, personOf } from '@/domain/people';
 import { calculateBodyFat, deriveBodyMetrics } from './bodyMetrics';
 import { heightMeters, sexIndex } from './profile';
 import type { WeighIn } from './session';
@@ -130,4 +131,24 @@ export function backfillDerived(list: readonly Measurement[], profile?: UserProf
     }
   }
   return add.length === 0 ? list : [...list, ...add];
+}
+
+/**
+ * backfillDerived for a phone with more than one person: each person's readings are filled in using their own
+ * profile, and what is added is marked as theirs. Returns the same list when nothing was added.
+ */
+export function backfillForPeople(
+  list: readonly Measurement[],
+  profileFor: (personId: string) => UserProfile | null | undefined,
+): readonly Measurement[] {
+  const ids = [...new Set(list.map(personOf))];
+  let changed = false;
+  const parts = ids.map((id) => {
+    const part = measurementsOf(list, id);
+    const filled = backfillDerived(part, profileFor(id));
+    if (filled === part) return part;
+    changed = true;
+    return [...part, ...forPerson(filled.slice(part.length), id)];
+  });
+  return changed ? parts.flat() : list;
 }

@@ -81,24 +81,30 @@ describe('blood pressure arm and position for Apple Health', () => {
 
   it('carries the arm and position onto the sample', () => {
     const [s] = pendingBloodPressure([bp('bp_systolic', 125), bp('bp_diastolic', 64), bp('bp_arm', 1, 'right'), bp('bp_position', 1, 'standing')], new Set());
-    expect(s).toMatchObject({ arm: 'right', position: 'standing' });
+    expect(s).toMatchObject({ arm: 'right', position: 'standing', note: null });
   });
 
   it('leaves them null when nothing was recorded', () => {
     const [s] = pendingBloodPressure([bp('bp_systolic', 125), bp('bp_diastolic', 64)], new Set());
-    expect(s).toMatchObject({ arm: null, position: null });
+    expect(s).toMatchObject({ arm: null, position: null, note: null });
     expect(bloodPressureMetadataAttempts(s)).toEqual([]);
   });
 
   it('tries Apple\'s placement side plus Keel keys first, then Keel keys alone', () => {
-    expect(bloodPressureMetadataAttempts({ arm: 'left', position: 'sitting' })).toEqual([
+    expect(bloodPressureMetadataAttempts({ arm: 'left', position: 'sitting', note: null })).toEqual([
       { KeelBloodPressureArm: 'left', KeelBodyPosition: 'sitting', HKDevicePlacementSide: 1 },
       { KeelBloodPressureArm: 'left', KeelBodyPosition: 'sitting' },
     ]);
-    expect(bloodPressureMetadataAttempts({ arm: 'right', position: null })[0]).toMatchObject({ HKDevicePlacementSide: 2 });
+    expect(bloodPressureMetadataAttempts({ arm: 'right', position: null, note: null })[0]).toMatchObject({ HKDevicePlacementSide: 2 });
+  });
+
+  it('never carries the note into Apple Health', () => {
+    const [s] = pendingBloodPressure([bp('bp_systolic', 125), bp('bp_diastolic', 64), bp('bp_arm', 1, 'left'), bp('bp_note', 1, 'private words')], new Set());
+    expect(s.note).toBeNull(); // the Health path does not even collect it
+    expect(JSON.stringify(bloodPressureMetadataAttempts(s))).not.toContain('private');
   });
 
   it('sends only the position when there is no arm (no placement side to give)', () => {
-    expect(bloodPressureMetadataAttempts({ arm: null, position: 'lying' })).toEqual([{ KeelBodyPosition: 'lying' }]);
+    expect(bloodPressureMetadataAttempts({ arm: null, position: 'lying', note: null })).toEqual([{ KeelBodyPosition: 'lying' }]);
   });
 });

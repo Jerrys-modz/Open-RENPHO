@@ -30,7 +30,7 @@ describe('importedMeasurements', () => {
   });
 
   it('does not re-apply the default to a reading already stored, so a correction in History survives', () => {
-    const stored = [...readingToMeasurements(base, { arm: 'right', position: null })];
+    const stored = [...readingToMeasurements(base, { arm: 'right', position: null, note: null })];
     const out = importedMeasurements(stored, [base, second], left);
     expect(out.filter((m) => m.takenAt === 1_000 && m.type === 'bp_arm')).toHaveLength(0);
     expect(out.filter((m) => m.takenAt === 2_000 && m.type === 'bp_arm').map((m) => m.site)).toEqual(['left']);

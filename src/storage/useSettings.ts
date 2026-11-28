@@ -1,6 +1,6 @@
 import { File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
-import { NO_BP_CONTEXT, type BpArm, type BpContext, type BpPosition } from '@/domain/bloodPressure';
+import { type BpArm, type BpDefaults, type BpPosition } from '@/domain/bloodPressure';
 import { readDemoMode } from '@/demo';
 import { defaultUnitSystem, type PressureUnit, type UnitSystem } from '@/util/units';
 
@@ -10,7 +10,7 @@ const demo = readDemoMode() !== null;
 let cache: UnitSystem | undefined;
 let anyUserCache: boolean | undefined;
 let pressureCache: PressureUnit | undefined;
-let bpDefaultsCache: BpContext = NO_BP_CONTEXT;
+let bpDefaultsCache: BpDefaults = { arm: null, position: null };
 const listeners = new Set<() => void>();
 
 function systemLocale(): string | undefined {
@@ -32,7 +32,9 @@ function snapshot(): UnitSystem {
           const data = JSON.parse(f.textSync()) as { units?: unknown; beurerAnyUser?: unknown; pressure?: unknown; bpArm?: unknown; bpPosition?: unknown };
           bpDefaultsCache = {
             arm: data.bpArm === 'left' || data.bpArm === 'right' ? data.bpArm : null,
-            position: data.bpPosition === 'sitting' || data.bpPosition === 'standing' || data.bpPosition === 'lying' ? data.bpPosition : null,
+            position: data.bpPosition === 'sitting' || data.bpPosition === 'standing' || data.bpPosition === 'lying' || data.bpPosition === 'reclining'
+                ? data.bpPosition
+                : null,
           };
           if (data.pressure === 'mmHg' || data.pressure === 'kPa') pressureCache = data.pressure;
           if (data.units === 'metric' || data.units === 'imperial') cache = data.units;
@@ -102,7 +104,7 @@ export function usePressureUnit(): PressureUnit {
 }
 
 /** The arm and position applied to blood-pressure readings the next sync imports. Null means not recorded. */
-export function getBpDefaults(): BpContext {
+export function getBpDefaults(): BpDefaults {
   snapshot();
   return bpDefaultsCache;
 }
@@ -113,7 +115,7 @@ export function setBpDefaults(change: { arm?: BpArm | null; position?: BpPositio
   persist();
 }
 
-export function useBpDefaults(): BpContext {
+export function useBpDefaults(): BpDefaults {
   return useSyncExternalStore(
     (cb) => {
       listeners.add(cb);

@@ -2,11 +2,15 @@ import { File, Paths } from 'expo-file-system';
 import type { WeighIn } from '@/ble/qn/session';
 import { deriveBodyMetrics } from '@/ble/qn/bodyMetrics';
 import type { Measurement } from '@/domain/measurement';
+import type { Goals } from '@/domain/goals';
 import type { UserProfile } from '@/domain/profile';
 
 export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile' | 'capture';
 
 const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile', 'capture'];
+
+/** Sample goals for the CI screenshots: a weight a little below the demo history, and the usual blood-pressure target. */
+export const DEMO_GOALS: Goals = { weight: { targetKg: 72.6, startKg: 80.6 }, bp: { systolic: 130, diastolic: 80 } };
 
 export const DEMO_PROFILE: UserProfile = { sex: 'male', birthDate: '1983-03-14', heightCm: 178, athlete: false };
 
@@ -81,7 +85,8 @@ export function demoMeasurements(): Measurement[] {
     out.push({ type: 'pulse', value: 66 + Math.round(Math.sin(i / 2) * 4), takenAt, source: 'ihealth-kn550bt' });
     if (i === 10) out.push({ type: 'irregular_pulse', value: 1, takenAt, source: 'ihealth-kn550bt' });
     out.push({ type: 'bp_arm', value: 1, takenAt, source: 'ihealth-kn550bt', site: 'left' });
-    out.push({ type: 'bp_position', value: 1, takenAt, source: 'ihealth-kn550bt', site: 'sitting' });
+    out.push({ type: 'bp_position', value: 1, takenAt, source: 'ihealth-kn550bt', site: i === 6 ? 'reclining' : 'sitting' });
+    if (i === 2) out.push({ type: 'bp_note', value: 1, takenAt, source: 'ihealth-kn550bt', site: 'After coffee' });
   }
   const sites: [string, number, number][] = [
     ['waist', 91.0, -0.7],

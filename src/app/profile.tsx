@@ -7,6 +7,7 @@ import { fromIsoDate, toIsoDate, validateProfile, type Sex } from '@/domain/prof
 import { parseSlotLink } from '@/ble/beurer/protocol';
 import { clearBeurerPairing, loadBeurerPairing, saveBeurerPairing } from '@/storage/beurerPairing';
 import { backfillMeasurements } from '@/storage/useMeasurements';
+import { PersonNote } from '@/ui/PersonNote';
 import { saveProfile, useProfile } from '@/storage/useProfile';
 import { setBeurerAnyUser, setPressureUnit, setUnits, useBeurerAnyUser, usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card, SectionTitle } from '@/ui/components';
@@ -14,11 +15,12 @@ import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatLongDate } from '@/util/format';
 import { heightToInput, parseHeightToCm, type UnitSystem } from '@/util/units';
+import { usePeople } from '@/storage/usePeople';
 
 const DEFAULT_PICK = new Date(1990, 0, 1, 12);
 const OLDEST = new Date(1915, 0, 1);
 
-export default function ProfileScreen() {
+function ProfileForm() {
   const c = useColors();
   const existing = useProfile();
   const units = useUnits();
@@ -62,6 +64,7 @@ export default function ProfileScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <PersonNote prefix="Profile for" />
       <ThemedText subtle style={styles.intro}>
         Your scale reports your weight. Body fat and everything derived from it (BMI, water, muscle, bone, BMR) is
         calculated from your sex, age and height. This stays on your phone.
@@ -166,6 +169,8 @@ export default function ProfileScreen() {
       ))}
 
       <Button title="Save profile" onPress={save} style={styles.button} />
+      <Button title="Goals" variant="secondary" onPress={() => router.push('/goals')} style={styles.button} />
+      <Button title="People" variant="secondary" onPress={() => router.push('/people')} style={styles.button} />
       <SectionTitle>Beurer scale user</SectionTitle>
       {pairing && (
         <Card style={styles.athlete}>
@@ -264,3 +269,9 @@ const styles = StyleSheet.create({
   linkRow: { flexDirection: 'row', gap: 8, alignItems: 'center' },
   linkInput: { flex: 1 },
 });
+
+/** Starts fresh for whoever is active: the form holds their values, so it must not carry over to another person. */
+export default function ProfileScreen() {
+  const { activeId } = usePeople();
+  return <ProfileForm key={activeId} />;
+}

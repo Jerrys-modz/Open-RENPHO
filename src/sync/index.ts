@@ -1,4 +1,4 @@
-import { getMeasurements } from '@/storage/useMeasurements';
+import { getPrimaryMeasurements } from '@/storage/useMeasurements';
 import { loadSparkyKey } from '@/storage/sparkyKey';
 import { getSyncState, markAppleHealthSynced, markSparkySynced, updateSparky } from '@/storage/useSyncState';
 import { writeAppleHealthBloodPressure, writeAppleHealthSamples } from './appleHealth';
@@ -39,8 +39,8 @@ export function syncAppleHealth(): Promise<SyncResult> {
   if (!getSyncState().appleHealth.enabled) return Promise.resolve({ written: 0, failed: 0 });
   return once('appleHealth', async () => {
     const synced = new Set(getSyncState().appleHealth.synced);
-    const todo = pendingSamples(getMeasurements(), synced);
-    const bp = pendingBloodPressure(getMeasurements(), synced);
+    const todo = pendingSamples(getPrimaryMeasurements(), synced);
+    const bp = pendingBloodPressure(getPrimaryMeasurements(), synced);
     if (todo.length === 0 && bp.length === 0) return { written: 0, failed: 0 };
     const a = todo.length ? await writeAppleHealthSamples(todo) : { written: [], failed: 0 };
     const b = bp.length ? await writeAppleHealthBloodPressure(bp) : { written: [], failed: 0 };
@@ -65,7 +65,7 @@ export function syncSparky(): Promise<SyncResult> {
     const apiKey = await loadSparkyKey();
     if (!apiKey) return { written: 0, failed: 1, problem: 'No SparkyFitness API key is saved.' };
 
-    const todo = pendingSparkyItems(getMeasurements(), new Set(state.synced), state.includeExtras);
+    const todo = pendingSparkyItems(getPrimaryMeasurements(), new Set(state.synced), state.includeExtras);
     let written = 0;
     let failed = 0;
     let problem: string | null = null;

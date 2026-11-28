@@ -1,38 +1,42 @@
 import { File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
 import { DEMO_PROFILE, readDemoMode } from '@/demo';
+import { personFile, PRIMARY_PERSON } from '@/domain/people';
 import { parseProfile, serializeProfile, type UserProfile } from '@/domain/profile';
+import { getActivePersonId, subscribePeople } from './usePeople';
 
-// One shared copy of the profile, in a JSON file next to the measurements.
-const file = () => new File(Paths.document, 'profile.json');
+// One profile per person, each in its own JSON file (the primary person's keeps the original name).
+const file = (personId: string) => new File(Paths.document, personFile('profile', personId));
 const demo = readDemoMode() !== null;
-let cache: UserProfile | null | undefined;
+const cache = new Map<string, UserProfile | null>();
 const listeners = new Set<() => void>();
 
-function snapshot(): UserProfile | null {
-  if (cache === undefined) {
-    if (demo) cache = DEMO_PROFILE;
+export function getProfileFor(personId: string): UserProfile | null {
+  if (!cache.has(personId)) {
+    if (demo) cache.set(personId, personId === PRIMARY_PERSON ? DEMO_PROFILE : null);
     else {
       try {
-        const f = file();
-        cache = f.exists ? parseProfile(f.textSync()) : null;
+        const f = file(personId);
+        cache.set(personId, f.exists ? parseProfile(f.textSync()) : null);
       } catch {
-        cache = null;
+        cache.set(personId, null);
       }
     }
   }
-  return cache;
+  return cache.get(personId) ?? null;
 }
 
+/** The active person's profile. */
 export function getProfile(): UserProfile | null {
-  return snapshot();
+  return getProfileFor(getActivePersonId());
 }
 
 export function saveProfile(p: UserProfile): void {
-  cache = p;
+  const id = getActivePersonId();
+  cache.set(id, p);
   if (!demo) {
     try {
-      const f = file();
+      const f = file(id);
       if (!f.exists) f.create();
       f.writeSync(serializeProfile(p));
     } catch (e) {
@@ -42,13 +46,29 @@ export function saveProfile(p: UserProfile): void {
   listeners.forEach((l) => l());
 }
 
+/** Forgets one person's profile (when that person is removed). */
+export function deleteProfileFor(personId: string): void {
+  cache.delete(personId);
+  if (!demo) {
+    try {
+      const f = file(personId);
+      if (f.exists) f.delete();
+    } catch (e) {
+      console.warn('[profile] could not delete', e);
+    }
+  }
+  listeners.forEach((l) => l());
+}
+
+function subscribe(cb: () => void) {
+  listeners.add(cb);
+  const off = subscribePeople(cb);
+  return () => {
+    listeners.delete(cb);
+    off();
+  };
+}
+
 export function useProfile(): UserProfile | null {
-  return useSyncExternalStore(
-    (cb) => {
-      listeners.add(cb);
-      return () => listeners.delete(cb);
-    },
-    snapshot,
-    snapshot,
-  );
+  return useSyncExternalStore(subscribe, getProfile, getProfile);
 }

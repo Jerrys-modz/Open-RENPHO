@@ -15,6 +15,7 @@ import { SCALE_METRICS } from '@/ui/metrics';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatForDisplay } from '@/util/units';
+import { PersonNote } from '@/ui/PersonNote';
 
 export default function WeighInScreen() {
   const c = useColors();
@@ -73,6 +74,7 @@ export default function WeighInScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <PersonNote prefix="Saving to" />
       <Card style={styles.hero}>
         <ThemedText subtle style={styles.status}>
           {status}
