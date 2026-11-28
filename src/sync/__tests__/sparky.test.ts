@@ -121,11 +121,50 @@ describe('checkConnection', () => {
 });
 
 describe('blood pressure to SparkyFitness', () => {
-  const bp = (type: Measurement['type'], value: number): Measurement => ({ type, value, takenAt: Date.UTC(2026, 9, 21, 18, 52), source: 'ihealth-kn550bt' });
+  const T0 = Date.UTC(2026, 9, 21, 18, 52);
+  const bp = (type: Measurement['type'], value: number, site?: string, takenAt = T0): Measurement => ({ type, value, takenAt, source: 'ihealth-kn550bt', site });
+  const reading = (takenAt = T0): Measurement[] => [bp('bp_systolic', 125, undefined, takenAt), bp('bp_diastolic', 64, undefined, takenAt), bp('pulse', 69, undefined, takenAt)];
 
-  it('sends readings as custom measurements in mmHg and bpm, even without extras', () => {
-    expect(toSparkyItem(bp('bp_systolic', 125), false)?.record).toMatchObject({ type: 'Blood Pressure Systolic', value: 125, unit: 'mmHg' });
-    expect(toSparkyItem(bp('bp_diastolic', 64), false)?.record).toMatchObject({ type: 'Blood Pressure Diastolic', unit: 'mmHg' });
-    expect(toSparkyItem(bp('pulse', 69), false)?.record).toMatchObject({ type: 'Pulse (cuff)', unit: 'bpm' });
+  it('uses the blood-pressure sync types, with a source, even without extras', () => {
+    expect(toSparkyItem(bp('bp_systolic', 125), false)?.record).toMatchObject({
+      type: 'blood_pressure_systolic',
+      value: 125,
+      unit: 'mmHg',
+      source: 'keel',
+      timestamp: new Date(T0).toISOString(),
+    });
+    expect(toSparkyItem(bp('bp_diastolic', 64), false)?.record).toMatchObject({ type: 'blood_pressure_diastolic', source: 'keel' });
+  });
+
+  it('sends no separate records for pulse, arm, position or the cuff flags', () => {
+    for (const m of [bp('pulse', 69), bp('bp_arm', 1, 'left'), bp('bp_position', 1, 'sitting'), bp('irregular_pulse', 1), bp('body_movement', 1)]) {
+      expect(toSparkyItem(m, true)).toBeNull();
+    }
+  });
+
+  it('puts pulse, arm and position on both halves with the same time and source', () => {
+    const list = [...reading(), bp('bp_arm', 1, 'left'), bp('bp_position', 1, 'sitting')];
+    const items = pendingSparkyItems(list, new Set(), false);
+    expect(items.map((i) => i.record.type).sort()).toEqual(['blood_pressure_diastolic', 'blood_pressure_systolic']);
+    for (const i of items) {
+      expect(i.record).toMatchObject({ pulse_bpm: 69, arm: 'left', body_position: 'sitting', source: 'keel', timestamp: new Date(T0).toISOString() });
+    }
+  });
+
+  it('leaves arm and position out when none was recorded', () => {
+    const [i] = pendingSparkyItems(reading(), new Set(), false);
+    expect(i.record).toMatchObject({ pulse_bpm: 69 });
+    expect(i.record).not.toHaveProperty('arm');
+    expect(i.record).not.toHaveProperty('body_position');
+  });
+
+  it('keeps each reading\'s context apart and does not resend what was already sent', () => {
+    const t1 = T0 + 60_000;
+    const list = [...reading(), bp('bp_arm', 1, 'right'), ...reading(t1)];
+    const items = pendingSparkyItems(list, new Set(), false);
+    expect(items.filter((i) => i.takenAt === T0).every((i) => i.record.arm === 'right')).toBe(true);
+    expect(items.filter((i) => i.takenAt === t1).every((i) => i.record.arm === undefined)).toBe(true);
+    const sent = new Set(items.filter((i) => i.takenAt === T0).map((i) => i.key));
+    expect(pendingSparkyItems(list, sent, false).every((i) => i.takenAt === t1)).toBe(true);
   });
 });

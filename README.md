@@ -46,7 +46,7 @@ Other scales and cuffs are not supported. Keel is not affiliated with RENPHO, Be
 - **Body composition is partly estimated.** Where your scale sends body fat or impedance, Keel uses it. Otherwise it estimates from weight and your profile. These numbers can differ from the manufacturer's app and are not a medical measurement.
 - **Blood-pressure categories** follow the 2017 ACC/AHA adult guidelines and are for information only. Keel is not a medical device and does not give medical advice. Talk to a doctor about your readings.
 - **Apple Health** receives weight, body fat, lean mass, BMI, waist, blood pressure (as one entry) and heart rate (the cuff's pulse). Other metrics have no home in Health.
-- **SparkyFitness** receives its built-in fields where they exist, and blood pressure and cuff pulse as custom measurements. Details are in [docs/protocol/sparkyfitness.md](docs/protocol/sparkyfitness.md).
+- **SparkyFitness** receives its built-in fields where they exist, and blood pressure (with pulse, arm and position) through its blood-pressure sync. Details are in [docs/protocol/sparkyfitness.md](docs/protocol/sparkyfitness.md).
 - **Exported CSV files** are always in kg, cm and mmHg, whichever display units you choose.
 
 ## Building

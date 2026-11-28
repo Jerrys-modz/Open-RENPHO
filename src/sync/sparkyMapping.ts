@@ -15,6 +15,12 @@ export interface SparkyRecord {
   timestamp: string;
   /** Only read for custom measurements. */
   unit?: string;
+  /** Blood pressure only: which app the reading came from. Both halves of a reading must carry the same one. */
+  source?: string;
+  /** Blood pressure only, on either or both halves: pulse, arm and position of the reading. */
+  pulse_bpm?: number;
+  arm?: string;
+  body_position?: string;
 }
 
 export interface SparkyItem {
@@ -59,19 +65,43 @@ const EXTRAS: Partial<Record<Measurement['type'], { type: string; unit: string }
 };
 
 /**
- * Blood-pressure cuff readings. SparkyFitness has no blood-pressure field, so these are custom
- * measurements (created on first use), always sent, in mmHg and bpm. Each reading keeps its own
- * timestamp. Pulse is named apart from Sparky's own heart_rate so spot checks do not mix with it.
+ * Blood pressure goes through SparkyFitness's blood-pressure sync types, one record per half. The
+ * server pairs the halves by source and exact timestamp, so both carry the same `timestamp` and
+ * `source`. Pulse, arm and position ride on the records (pulse has no type of its own). Arm and
+ * position are only kept by the server when they are exactly its enum values, which ours are.
  */
-const BLOOD_PRESSURE: Partial<Record<Measurement['type'], { type: string; unit: string }>> = {
-  bp_systolic: { type: 'Blood Pressure Systolic', unit: 'mmHg' },
-  bp_diastolic: { type: 'Blood Pressure Diastolic', unit: 'mmHg' },
-  pulse: { type: 'Pulse (cuff)', unit: 'bpm' },
+const BLOOD_PRESSURE_TYPE: Partial<Record<Measurement['type'], string>> = {
+  bp_systolic: 'blood_pressure_systolic',
+  bp_diastolic: 'blood_pressure_diastolic',
 };
+
+/** Sent as `source` on blood-pressure records. */
+export const SPARKY_BP_SOURCE = 'keel';
+
+export interface SparkyBpExtras {
+  pulse?: number;
+  arm?: string;
+  position?: string;
+}
+
+/** Pulse, arm and position of each cuff reading, found among all measurements. */
+function bpExtrasByReading(all: readonly Measurement[]): Map<string, SparkyBpExtras> {
+  const out = new Map<string, SparkyBpExtras>();
+  for (const m of all) {
+    if (m.type !== 'pulse' && m.type !== 'bp_arm' && m.type !== 'bp_position') continue;
+    const id = `${m.source}|${m.takenAt}`;
+    const e = out.get(id) ?? {};
+    if (m.type === 'pulse') e.pulse = Math.round(m.value);
+    else if (m.type === 'bp_arm' && m.site) e.arm = m.site;
+    else if (m.type === 'bp_position' && m.site) e.position = m.site;
+    out.set(id, e);
+  }
+  return out;
+}
 
 const BUILT_IN_SITES = new Set(['waist', 'hips', 'neck']);
 
-export function toSparkyItem(m: Measurement, includeExtras: boolean): SparkyItem | null {
+export function toSparkyItem(m: Measurement, includeExtras: boolean, bp?: SparkyBpExtras): SparkyItem | null {
   const base = { date: localDate(m.takenAt), timestamp: new Date(m.takenAt).toISOString() };
   const item = (type: string, unit?: string): SparkyItem => ({
     key: measurementKey(m),
@@ -86,8 +116,18 @@ export function toSparkyItem(m: Measurement, includeExtras: boolean): SparkyItem
       ? item(m.site)
       : item(m.site[0].toUpperCase() + m.site.slice(1), 'cm');
   }
-  const bp = BLOOD_PRESSURE[m.type];
-  if (bp) return item(bp.type, bp.unit);
+  const bpType = BLOOD_PRESSURE_TYPE[m.type];
+  if (bpType) {
+    const it = item(bpType, 'mmHg');
+    it.record = {
+      ...it.record,
+      source: SPARKY_BP_SOURCE,
+      ...(bp?.pulse !== undefined ? { pulse_bpm: bp.pulse } : {}),
+      ...(bp?.arm ? { arm: bp.arm } : {}),
+      ...(bp?.position ? { body_position: bp.position } : {}),
+    };
+    return it;
+  }
   const built = BUILT_IN[m.type];
   if (built) return item(built.type);
   const extra = EXTRAS[m.type];
@@ -104,8 +144,9 @@ export function pendingSparkyItems(
   includeExtras: boolean,
 ): SparkyItem[] {
   const out: SparkyItem[] = [];
+  const extras = bpExtrasByReading(all);
   for (const m of all) {
-    const it = toSparkyItem(m, includeExtras);
+    const it = toSparkyItem(m, includeExtras, extras.get(`${m.source}|${m.takenAt}`));
     if (it && !synced.has(it.key)) out.push(it);
   }
   return out.sort((a, b) => a.takenAt - b.takenAt);

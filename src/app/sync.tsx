@@ -171,7 +171,7 @@ export default function SyncScreen() {
           </Card>
           <ThemedText subtle style={styles.text}>
             Sent: weight, body fat, muscle mass, bone mass, water %, BMR, and waist, hips and neck (other tape sites as custom
-            measurements), plus blood pressure and the cuff&apos;s pulse as custom measurements. SparkyFitness keeps one value per day
+            measurements), plus blood pressure with pulse, arm and position (needs a SparkyFitness version with blood-pressure support). SparkyFitness keeps one value per day
             for its built-in fields, so the last weigh-in of a day wins.
           </ThemedText>
           <Button title={busy ? 'Syncing…' : 'Sync now'} onPress={() => void runSparky()} disabled={busy} style={styles.button} />
