@@ -1,9 +1,11 @@
 import { File, Paths } from 'expo-file-system';
 import type { BeurerPairing } from '@/ble/beurer/session';
+import { personFile } from '@/domain/people';
+import { getActivePersonId } from './usePeople';
 
 // The user slot and 4-digit code we registered on the Beurer scale. Stays on this phone; losing it
-// means registering a new slot (the scale has 8).
-const file = () => new File(Paths.document, 'beurer-pairing.json');
+// means registering a new slot (the scale has 8). Each person has their own slot.
+const file = (personId: string = getActivePersonId()) => new File(Paths.document, personFile('beurer-pairing', personId));
 
 export function loadBeurerPairing(): BeurerPairing | null {
   try {
@@ -31,6 +33,16 @@ export function saveBeurerPairing(p: BeurerPairing): void {
 export function clearBeurerPairing(): void {
   try {
     const f = file();
+    if (f.exists) f.delete();
+  } catch (e) {
+    console.warn('[beurer] could not clear pairing', e);
+  }
+}
+
+/** Forgets one person's slot on this phone (when that person is removed). The scale keeps the slot. */
+export function clearBeurerPairingFor(personId: string): void {
+  try {
+    const f = file(personId);
     if (f.exists) f.delete();
   } catch (e) {
     console.warn('[beurer] could not clear pairing', e);

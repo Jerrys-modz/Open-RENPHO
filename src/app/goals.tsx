@@ -16,8 +16,10 @@ import { Button, Card, SectionTitle } from '@/ui/components';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatForDisplay, parseWeightToKg, weightToInput } from '@/util/units';
+import { PersonNote } from '@/ui/PersonNote';
+import { usePeople } from '@/storage/usePeople';
 
-export default function GoalsScreen() {
+function GoalsForm() {
   const c = useColors();
   const goals = useGoals();
   const units = useUnits();
@@ -56,6 +58,7 @@ export default function GoalsScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+      <PersonNote prefix="Goals for" />
       <ThemedText subtle style={styles.intro}>
         Goals stay on your phone and are never synced. Leave a goal empty to have none.
       </ThemedText>
@@ -119,3 +122,9 @@ const styles = StyleSheet.create({
   pair: { flexDirection: 'row', gap: 12 },
   button: { flex: 0, marginTop: 8 },
 });
+
+/** Starts fresh for whoever is active: the form holds their values, so it must not carry over to another person. */
+export default function GoalsScreen() {
+  const { activeId } = usePeople();
+  return <GoalsForm key={activeId} />;
+}

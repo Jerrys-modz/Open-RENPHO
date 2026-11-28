@@ -8,6 +8,7 @@ import {
   measurementsOf,
   newPersonId,
   parsePeople,
+  personFile,
   personOf,
   removePerson,
   renamePerson,
@@ -89,5 +90,13 @@ describe('parsePeople', () => {
 
   it('keeps a renamed primary person', () => {
     expect(parsePeople(JSON.stringify({ people: [{ id: 'me', name: 'Jordan' }], activeId: 'me' })).people[0].name).toBe('Jordan');
+  });
+});
+
+describe('personFile', () => {
+  it('keeps the original file name for the primary person and adds the id for everyone else', () => {
+    expect(personFile('profile', 'me')).toBe('profile.json');
+    expect(personFile('goals', 'p1')).toBe('goals-p1.json');
+    expect(personFile('beurer-pairing', 'ab12cd')).toBe('beurer-pairing-ab12cd.json');
   });
 });

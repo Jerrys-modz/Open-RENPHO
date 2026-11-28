@@ -18,6 +18,7 @@ import { ThemedText } from '@/ui/ThemedText';
 import { TrendChart } from '@/ui/TrendChart';
 import { formatDateTime, formatShortDate } from '@/util/format';
 import { convertValue, formatDeltaForDisplay, formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
+import { PersonNote } from '@/ui/PersonNote';
 
 /** Shown when the chip list is collapsed. */
 const PRIMARY_IDS = ['weight', 'body_fat', 'bmi', 'muscle_mass', 'waist'];
@@ -63,6 +64,7 @@ export default function Overview() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <PersonNote prefix="Viewing" />
       <View style={styles.actions}>
         <Button title="Weigh in" onPress={() => router.push('/scale')} />
         <Button title="Measure" variant="secondary" onPress={() => router.push('/tape')} />

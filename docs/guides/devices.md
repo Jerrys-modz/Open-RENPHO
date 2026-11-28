@@ -51,6 +51,16 @@ The **clear the cuff after importing** switch is off by default. When on, the cu
 
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
 
+## People
+
+If more than one person uses the phone (or the same scales and cuff), open the profile screen and tap **People**. Add each person by name. Every person has their own readings, profile, goals and Beurer scale slot, and nothing is shared between them.
+
+- **Switch before you measure.** New readings are saved to whoever is **active**. When there is more than one person, the weigh-in, tape, blood-pressure, Overview and History screens say whose they are ("Saving to Alex · Change"); tap it to switch.
+- **The cuff holds everyone's readings.** The KN-550BT cannot tell people apart, and Keel saves each reading only once, to whoever was active when it first came in. So switch to the right person and sync right after each person measures, or turn on *Clear the cuff after importing* so old readings are not left for the next person's sync.
+- **Beurer scale.** Link or register the scale slot while the right person is active (Profile > Beurer scale user); each person has their own.
+- **Syncing.** Only the first person's readings are sent to Apple Health and SparkyFitness, because those accounts belong to one person. Everyone else's stay on the phone, and each person's data can be exported from History while they are active.
+- **Rename or remove.** People lets you rename anyone. Removing a person deletes their readings, profile, goals and Beurer slot from the phone (not from Apple Health or SparkyFitness, which never received them). The first person cannot be removed, and readings that existed before people were added belong to them.
+
 ## Goals
 
 Open the profile screen and tap **Goals**.

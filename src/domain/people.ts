@@ -100,3 +100,7 @@ export function parsePeople(text: string): People {
     return DEFAULT_PEOPLE;
   }
 }
+
+/** The file a person's data lives in: the primary person keeps the original name, others get their id added. */
+export const personFile = (base: string, personId: string): string =>
+  personId === PRIMARY_PERSON ? `${base}.json` : `${base}-${personId}.json`;

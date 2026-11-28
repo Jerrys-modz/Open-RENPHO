@@ -10,6 +10,7 @@ Keel is an iPhone app that talks to your Bluetooth health devices directly, keep
 - **Measure** with a RENPHO tape: waist, hips, chest, neck, bicep, thigh and calf.
 - **Blood pressure** from an iHealth KN-550BT cuff: systolic, diastolic and pulse, with the cuff's irregular-pulse and movement flags, which arm and position you used and a note (set a default, or correct a single reading), a combined systolic/diastolic chart, a category for the latest reading, 7 and 30 day averages (also before noon versus afternoon), and a PDF report for your doctor.
 - **Goals:** a target weight with progress on the Overview, and an optional blood-pressure target (how many recent readings were below it).
+- **People:** several people can share the phone, scales and cuff, each with their own readings, profile and goals.
 - **Trends:** colour-coded charts for every metric. Press and drag a chart to read a value and its date.
 - **History:** every saved reading, deletable, and exportable as a CSV file.
 - **Sync** to Apple Health and to a self-hosted [SparkyFitness](https://github.com/CodeWithCJ/SparkyFitness) server. Each reading is sent once, never twice.

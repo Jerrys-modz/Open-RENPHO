@@ -12,6 +12,7 @@ import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatDateTime } from '@/util/format';
 import { formatForDisplay, type UnitSystem } from '@/util/units';
+import { PersonNote } from '@/ui/PersonNote';
 
 const SITE_DEFS = METRICS.filter((m) => m.key.type === 'circumference');
 const CM_PER_IN = 2.54;
@@ -74,6 +75,7 @@ export default function TapeScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <PersonNote prefix="Saving to" />
       <Card style={styles.hero}>
         <ThemedText subtle style={styles.status}>
           {status}

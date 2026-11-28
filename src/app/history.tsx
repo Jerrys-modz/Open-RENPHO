@@ -6,6 +6,7 @@ import { groupEntries, type Entry } from '@/storage/measurements';
 import { deleteEntry, setBpContext, useMeasurements } from '@/storage/useMeasurements';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card } from '@/ui/components';
+import { PersonNote } from '@/ui/PersonNote';
 import { Segmented } from '@/ui/Segmented';
 import { METRICS, metricById } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
@@ -128,7 +129,10 @@ export default function HistoryScreen() {
       data={entries}
       keyExtractor={(e) => e.id}
       ListHeaderComponent={
-        entries.length > 0 ? <Button title="Export CSV" variant="secondary" onPress={() => void exportCsv()} /> : undefined
+        <View style={{ gap: 10 }}>
+          <PersonNote prefix="Showing" />
+          {entries.length > 0 && <Button title="Export CSV" variant="secondary" onPress={() => void exportCsv()} />}
+        </View>
       }
       ListEmptyComponent={
         <ThemedText subtle style={styles.empty}>

@@ -137,3 +137,18 @@ describe('withBpContext', () => {
     );
   });
 });
+
+describe('withBpContext for another person', () => {
+  const cuff = (type: Measurement['type'], value: number, takenAt: number, person?: string, site?: string): Measurement => ({ type, value, takenAt, source: 'ihealth-kn550bt', site, person });
+
+  it('marks the new context rows as that person\'s', () => {
+    const list = [cuff('bp_systolic', 120, 1, 'p1'), cuff('bp_diastolic', 80, 1, 'p1')];
+    const out = withBpContext(list, 'ihealth-kn550bt', 1, { arm: 'left', position: null, note: 'hi' }, 'p1');
+    expect(out.filter((x) => x.type === 'bp_arm' || x.type === 'bp_note').map((x) => x.person)).toEqual(['p1', 'p1']);
+  });
+
+  it('leaves the primary person\'s rows unmarked, as before', () => {
+    const out = withBpContext([], 'ihealth-kn550bt', 1, { arm: 'right', position: null, note: null });
+    expect(out[0]).not.toHaveProperty('person');
+  });
+});

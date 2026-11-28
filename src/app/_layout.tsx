@@ -30,6 +30,7 @@ export default function RootLayout() {
         <Stack.Screen name="bp" options={{ title: 'Blood pressure' }} />
         <Stack.Screen name="tape" options={{ title: 'Tape measure' }} />
         <Stack.Screen name="profile" options={{ title: 'Profile' }} />
+        <Stack.Screen name="people" options={{ title: 'People' }} />
         <Stack.Screen name="goals" options={{ title: 'Goals' }} />
         <Stack.Screen name="history" options={{ title: 'History' }} />
         <Stack.Screen name="sync" options={{ title: 'Sync' }} />

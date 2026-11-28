@@ -1,5 +1,6 @@
 /** Pure helpers over a flat list of measurements. No I/O. */
 import { bpContextMeasurements, type BpContext } from '@/domain/bloodPressure';
+import { PRIMARY_PERSON, forPerson } from '@/domain/people';
 import type { Measurement, MeasurementType } from '@/domain/measurement';
 
 export interface SeriesKey {
@@ -88,9 +89,15 @@ export function removeEntry(list: readonly Measurement[], entry: Entry): Measure
 }
 
 /** Replaces the arm and position recorded for one cuff reading (null clears a field). Other rows are untouched. */
-export function withBpContext(list: readonly Measurement[], source: string, takenAt: number, c: BpContext): Measurement[] {
+export function withBpContext(
+  list: readonly Measurement[],
+  source: string,
+  takenAt: number,
+  c: BpContext,
+  personId: string = PRIMARY_PERSON,
+): Measurement[] {
   const isOld = (m: Measurement) => m.source === source && m.takenAt === takenAt && (m.type === 'bp_arm' || m.type === 'bp_position' || m.type === 'bp_note');
-  return [...list.filter((m) => !isOld(m)), ...bpContextMeasurements(source, takenAt, c)];
+  return [...list.filter((m) => !isOld(m)), ...forPerson(bpContextMeasurements(source, takenAt, c), personId)];
 }
 
 export function serialize(list: readonly Measurement[]): string {

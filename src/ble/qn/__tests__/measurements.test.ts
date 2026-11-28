@@ -1,5 +1,6 @@
+import type { Measurement } from '@/domain/measurement';
 import type { UserProfile } from '@/domain/profile';
-import { backfillDerived, weighInToMeasurements } from '../measurements';
+import { backfillDerived, backfillForPeople, weighInToMeasurements } from '../measurements';
 
 const PROFILE: UserProfile = { sex: 'male', birthDate: '1983-01-01', heightCm: 170, athlete: false };
 const types = (ms: { type: string }[]) => ms.map((m) => m.type);
@@ -125,5 +126,30 @@ describe('backfillDerived', () => {
   it('returns the same array when nothing is missing', () => {
     const list = [{ type: 'weight' as const, value: 1, takenAt: 1, source: 's' }];
     expect(backfillDerived(list, PROFILE)).toBe(list);
+  });
+});
+
+describe('backfillForPeople', () => {
+  const weighIn = (person?: string): Measurement[] => [
+    { type: 'weight', value: 80, takenAt: 1, source: 'qn-scale', person },
+    { type: 'body_fat', value: 20, takenAt: 1, source: 'qn-scale', person },
+  ];
+  const tall = { sex: 'male' as const, birthDate: '1980-01-01', heightCm: 190, athlete: false };
+  const short = { sex: 'male' as const, birthDate: '1980-01-01', heightCm: 160, athlete: false };
+
+  it('uses each person\'s own profile and marks what it adds as theirs', () => {
+    const list = [...weighIn(), ...weighIn('p1').map((m) => ({ ...m, takenAt: 2 }))];
+    const out = backfillForPeople(list, (id) => (id === 'p1' ? short : tall));
+    const bmi = (person?: string) => out.find((m) => m.type === 'bmi' && m.person === person);
+    expect(bmi(undefined)?.value).toBeCloseTo(80 / 1.9 ** 2, 1);
+    expect(bmi('p1')?.value).toBeCloseTo(80 / 1.6 ** 2, 1);
+    // nothing leaked: every added row belongs to the person whose weigh-in it came from
+    expect(out.filter((m) => m.takenAt === 1).every((m) => m.person === undefined)).toBe(true);
+    expect(out.filter((m) => m.takenAt === 2).every((m) => m.person === 'p1')).toBe(true);
+  });
+
+  it('returns the same list when there is nothing to add', () => {
+    const full = backfillForPeople(weighIn(), () => tall);
+    expect(backfillForPeople(full, () => tall)).toBe(full);
   });
 });

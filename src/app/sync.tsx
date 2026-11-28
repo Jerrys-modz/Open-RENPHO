@@ -8,10 +8,12 @@ import { setAppleHealthEnabled, updateSparky, useSyncState } from '@/storage/use
 import { Button, Card, SectionTitle } from '@/ui/components';
 import { useColors } from '@/ui/theme';
 import { ThemedText } from '@/ui/ThemedText';
+import { usePeople } from '@/storage/usePeople';
 
 export default function SyncScreen() {
   const c = useColors();
   const { appleHealth, sparky } = useSyncState();
+  const people = usePeople();
   const [available, setAvailable] = useState<boolean | null>(null);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
@@ -93,6 +95,11 @@ export default function SyncScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      {people.people.length > 1 && (
+        <ThemedText subtle style={styles.text}>
+          Only {people.people[0].name}&apos;s readings are sent. Apple Health and SparkyFitness accounts belong to one person.
+        </ThemedText>
+      )}
       <SectionTitle>Apple Health</SectionTitle>
       <Card style={styles.row}>
         <View style={{ flex: 1 }}>

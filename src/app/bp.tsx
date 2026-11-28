@@ -16,6 +16,7 @@ import { ThemedText } from '@/ui/ThemedText';
 import { shareBpReport } from '@/util/shareBpReport';
 import { formatDateTime } from '@/util/format';
 import { formatForDisplay } from '@/util/units';
+import { PersonNote } from '@/ui/PersonNote';
 
 const BP_DEF = { unit: 'mmHg', digits: 0 };
 
@@ -94,6 +95,7 @@ export default function BloodPressureScreen() {
 
   return (
     <ScrollView contentContainerStyle={styles.container}>
+      <PersonNote prefix="Saving to" />
       <Card style={styles.hero}>
         <ThemedText subtle>{status}</ThemedText>
         <ThemedText style={styles.value}>
