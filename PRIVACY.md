@@ -20,6 +20,10 @@ Deleting the app deletes this data (keychain entries may remain until iOS clears
 
 Keel uses Bluetooth to find and read your scale, tape measure and blood-pressure cuff. While scanning, the app can see advertisements from other nearby Bluetooth devices, but it only acts on the supported devices. It does not store or send anything about the others. Bluetooth is never used to contact the device makers.
 
+## Notifications
+
+If you turn on reminders, Keel asks iOS for permission to show notifications. They are created on your phone and repeat at the time you chose; Keel uses no push server and sends nothing for them. A reminder's text is generic and never contains your readings.
+
 ## Apple Health
 
 If you turn it on, Keel **writes** measurements to Apple Health (weight, body fat, lean mass, BMI, waist, blood pressure and heart rate). A blood-pressure entry also carries the arm and position you recorded, as metadata. It does **not read** anything from Apple Health. You choose what Keel may write in the permission sheet and can change it any time in the Health app under *Sharing → Apps → Keel*. Once data is in Apple Health, Apple's policies and your Health settings apply to it.
