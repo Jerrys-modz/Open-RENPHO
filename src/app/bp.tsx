@@ -1,13 +1,14 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView, StyleSheet, Switch, View } from 'react-native';
-import { readingToMeasurements } from '@/ble/ihealth/measurements';
+import { importedMeasurements } from '@/ble/ihealth/measurements';
 import { CuffConnection } from '@/ble/ihealth/transport';
-import { addMeasurements, useMeasurements } from '@/storage/useMeasurements';
-import { usePressureUnit, useUnits } from '@/storage/useSettings';
+import { addMeasurements, getMeasurements, useMeasurements } from '@/storage/useMeasurements';
+import { getBpDefaults, setBpDefaults, useBpDefaults, usePressureUnit, useUnits } from '@/storage/useSettings';
 import { syncAll } from '@/sync';
 import { BP_CATEGORY_COLOR, BP_CATEGORY_LABEL, bpReadings, classifyBp } from '@/domain/bloodPressure';
 import { BloodPressureSummary } from '@/ui/BloodPressureSummary';
 import { Button, Card } from '@/ui/components';
+import { Segmented } from '@/ui/Segmented';
 import { ThemedText } from '@/ui/ThemedText';
 import { formatDateTime } from '@/util/format';
 import { formatForDisplay } from '@/util/units';
@@ -30,6 +31,7 @@ export default function BloodPressureScreen() {
   const readings = bpReadings(list);
   const latest = readings[0];
   const units = useUnits();
+  const defaults = useBpDefaults();
 
   const begin = () => {
     void conn.current?.stop();
@@ -42,7 +44,7 @@ export default function BloodPressureScreen() {
       onStatus: setStatus,
       onBattery: setBattery,
       onReadings: (readings) => {
-        addMeasurements(readings.flatMap(readingToMeasurements));
+        addMeasurements(importedMeasurements(getMeasurements(), readings, getBpDefaults()));
         void syncAll();
       },
       onDone: ({ imported, deleted }) => {
@@ -90,6 +92,40 @@ export default function BloodPressureScreen() {
       {result && <ThemedText>{result}</ThemedText>}
       {error && <ThemedText style={styles.error}>{error}</ThemedText>}
 
+      <Card style={styles.defaults}>
+        <ThemedText>How you usually measure</ThemedText>
+        <ThemedText subtle style={styles.hint}>
+          Applied to the new readings each sync imports. Change a saved reading in History.
+        </ThemedText>
+        <ThemedText subtle style={styles.hint}>
+          Arm
+        </ThemedText>
+        <Segmented
+          options={[
+            { value: 'left', label: 'Left' },
+            { value: 'right', label: 'Right' },
+            { value: null, label: 'Not set' },
+          ]}
+          value={defaults.arm}
+          onChange={(arm) => setBpDefaults({ arm })}
+          disabled={busy}
+        />
+        <ThemedText subtle style={styles.hint}>
+          Position
+        </ThemedText>
+        <Segmented
+          options={[
+            { value: 'sitting', label: 'Sitting' },
+            { value: 'standing', label: 'Standing' },
+            { value: 'lying', label: 'Lying' },
+            { value: null, label: 'Not set' },
+          ]}
+          value={defaults.position}
+          onChange={(position) => setBpDefaults({ position })}
+          disabled={busy}
+        />
+      </Card>
+
       <Card style={styles.toggle}>
         <View style={{ flex: 1 }}>
           <ThemedText>Clear the cuff after importing</ThemedText>
@@ -118,5 +154,6 @@ const styles = StyleSheet.create({
   category: { fontSize: 15, fontWeight: '700' },
   error: { color: '#e53935' },
   toggle: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  defaults: { gap: 8 },
   hint: { fontSize: 13 },
 });

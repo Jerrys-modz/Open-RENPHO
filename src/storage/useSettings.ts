@@ -1,5 +1,6 @@
 import { File, Paths } from 'expo-file-system';
 import { useSyncExternalStore } from 'react';
+import { NO_BP_CONTEXT, type BpArm, type BpContext, type BpPosition } from '@/domain/bloodPressure';
 import { readDemoMode } from '@/demo';
 import { defaultUnitSystem, type PressureUnit, type UnitSystem } from '@/util/units';
 
@@ -9,6 +10,7 @@ const demo = readDemoMode() !== null;
 let cache: UnitSystem | undefined;
 let anyUserCache: boolean | undefined;
 let pressureCache: PressureUnit | undefined;
+let bpDefaultsCache: BpContext = NO_BP_CONTEXT;
 const listeners = new Set<() => void>();
 
 function systemLocale(): string | undefined {
@@ -27,7 +29,11 @@ function snapshot(): UnitSystem {
       try {
         const f = file();
         if (f.exists) {
-          const data = JSON.parse(f.textSync()) as { units?: unknown; beurerAnyUser?: unknown; pressure?: unknown };
+          const data = JSON.parse(f.textSync()) as { units?: unknown; beurerAnyUser?: unknown; pressure?: unknown; bpArm?: unknown; bpPosition?: unknown };
+          bpDefaultsCache = {
+            arm: data.bpArm === 'left' || data.bpArm === 'right' ? data.bpArm : null,
+            position: data.bpPosition === 'sitting' || data.bpPosition === 'standing' || data.bpPosition === 'lying' ? data.bpPosition : null,
+          };
           if (data.pressure === 'mmHg' || data.pressure === 'kPa') pressureCache = data.pressure;
           if (data.units === 'metric' || data.units === 'imperial') cache = data.units;
           anyUserCache = data.beurerAnyUser === true;
@@ -49,7 +55,16 @@ function persist(): void {
     try {
       const f = file();
       if (!f.exists) f.create();
-      f.writeSync(JSON.stringify({ version: 1, units: cache, beurerAnyUser: anyUserCache === true, pressure: pressureCache ?? 'mmHg' }));
+      f.writeSync(
+        JSON.stringify({
+          version: 1,
+          units: cache,
+          beurerAnyUser: anyUserCache === true,
+          pressure: pressureCache ?? 'mmHg',
+          bpArm: bpDefaultsCache.arm,
+          bpPosition: bpDefaultsCache.position,
+        }),
+      );
     } catch (e) {
       console.warn('[settings] could not save', e);
     }
@@ -83,6 +98,29 @@ export function usePressureUnit(): PressureUnit {
     },
     getPressureUnit,
     getPressureUnit,
+  );
+}
+
+/** The arm and position applied to blood-pressure readings the next sync imports. Null means not recorded. */
+export function getBpDefaults(): BpContext {
+  snapshot();
+  return bpDefaultsCache;
+}
+
+export function setBpDefaults(change: { arm?: BpArm | null; position?: BpPosition | null }): void {
+  snapshot();
+  bpDefaultsCache = { ...bpDefaultsCache, ...change };
+  persist();
+}
+
+export function useBpDefaults(): BpContext {
+  return useSyncExternalStore(
+    (cb) => {
+      listeners.add(cb);
+      return () => listeners.delete(cb);
+    },
+    getBpDefaults,
+    getBpDefaults,
   );
 }
 

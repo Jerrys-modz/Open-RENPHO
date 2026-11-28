@@ -1,9 +1,12 @@
 import { File, Paths } from 'expo-file-system';
+import { useState } from 'react';
 import { Alert, FlatList, Share, StyleSheet, View } from 'react-native';
+import { bpContextOf, bpContextText, type BpArm, type BpPosition } from '@/domain/bloodPressure';
 import { groupEntries, type Entry } from '@/storage/measurements';
-import { deleteEntry, useMeasurements } from '@/storage/useMeasurements';
+import { deleteEntry, setBpContext, useMeasurements } from '@/storage/useMeasurements';
 import { usePressureUnit, useUnits } from '@/storage/useSettings';
 import { Button, Card } from '@/ui/components';
+import { Segmented } from '@/ui/Segmented';
 import { METRICS, metricById } from '@/ui/metrics';
 import { ThemedText } from '@/ui/ThemedText';
 import { measurementsToCsv } from '@/util/csv';
@@ -25,6 +28,7 @@ function summary(e: Entry, units: UnitSystem, pressure: PressureUnit): { title: 
     const pulse = e.measurements.find((m) => m.type === 'pulse');
     const notes = [
       pulse ? `Pulse ${Math.round(pulse.value)} bpm` : 'Blood pressure',
+      bpContextText(bpContextOf(e.measurements)),
       e.measurements.some((m) => m.type === 'irregular_pulse') ? 'irregular pulse' : null,
       e.measurements.some((m) => m.type === 'body_movement') ? 'movement' : null,
     ].filter(Boolean);
@@ -42,11 +46,44 @@ function summary(e: Entry, units: UnitSystem, pressure: PressureUnit): { title: 
   };
 }
 
+/** Arm and position for one cuff reading. Edits here do not change what Apple Health already holds. */
+function BpContextEditor({ entry }: { entry: Entry }) {
+  const source = entry.measurements[0].source;
+  const current = bpContextOf(entry.measurements);
+  return (
+    <View style={styles.editor}>
+      <Segmented<BpArm | null>
+        options={[
+          { value: 'left', label: 'Left arm' },
+          { value: 'right', label: 'Right arm' },
+          { value: null, label: 'Not set' },
+        ]}
+        value={current.arm}
+        onChange={(arm) => setBpContext(source, entry.takenAt, { ...current, arm })}
+      />
+      <Segmented<BpPosition | null>
+        options={[
+          { value: 'sitting', label: 'Sitting' },
+          { value: 'standing', label: 'Standing' },
+          { value: 'lying', label: 'Lying' },
+          { value: null, label: 'Not set' },
+        ]}
+        value={current.position}
+        onChange={(position) => setBpContext(source, entry.takenAt, { ...current, position })}
+      />
+      <ThemedText subtle style={styles.detail}>
+        Readings already sent to Apple Health keep what they were sent with.
+      </ThemedText>
+    </View>
+  );
+}
+
 export default function HistoryScreen() {
   const list = useMeasurements();
   const units = useUnits();
   const pressure = usePressureUnit();
   const entries = groupEntries(list);
+  const [editing, setEditing] = useState<string | null>(null);
 
   const confirmDelete = (e: Entry) =>
     Alert.alert(
@@ -86,14 +123,25 @@ export default function HistoryScreen() {
       renderItem={({ item }) => {
         const s = summary(item, units, pressure);
         return (
-          <Card style={styles.row}>
-            <View style={{ flex: 1 }}>
-              <ThemedText style={styles.title}>{s.title}</ThemedText>
-              <ThemedText subtle style={styles.detail}>
-                {formatDateTime(item.takenAt)} · {s.detail}
-              </ThemedText>
+          <Card style={styles.card}>
+            <View style={styles.row}>
+              <View style={{ flex: 1 }}>
+                <ThemedText style={styles.title}>{s.title}</ThemedText>
+                <ThemedText subtle style={styles.detail}>
+                  {formatDateTime(item.takenAt)} · {s.detail}
+                </ThemedText>
+              </View>
+              {item.kind === 'blood-pressure' && (
+                <Button
+                  title={editing === item.id ? 'Done' : 'Edit'}
+                  variant="secondary"
+                  onPress={() => setEditing(editing === item.id ? null : item.id)}
+                  style={styles.delete}
+                />
+              )}
+              <Button title="Delete" variant="secondary" onPress={() => confirmDelete(item)} style={styles.delete} />
             </View>
-            <Button title="Delete" variant="secondary" onPress={() => confirmDelete(item)} style={styles.delete} />
+            {item.kind === 'blood-pressure' && editing === item.id && <BpContextEditor entry={item} />}
           </Card>
         );
       }}
@@ -103,7 +151,9 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   container: { padding: 16, gap: 10 },
+  card: { gap: 12 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  editor: { gap: 8 },
   title: { fontSize: 17, fontWeight: '600' },
   detail: { fontSize: 13 },
   delete: { flex: 0, paddingHorizontal: 14 },

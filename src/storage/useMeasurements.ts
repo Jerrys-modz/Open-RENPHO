@@ -4,7 +4,8 @@ import { backfillDerived } from '@/ble/qn/measurements';
 import { demoMeasurements, readDemoMode } from '@/demo';
 import { loadMeasurements, saveMeasurements } from './fileStore';
 import { getProfile } from './useProfile';
-import { appendMeasurements, removeEntry, type Entry } from './measurements';
+import { appendMeasurements, removeEntry, withBpContext, type Entry } from './measurements';
+import type { BpContext } from '@/domain/bloodPressure';
 
 // One in-memory copy shared by every screen, persisted to disk on every change.
 let cache: Measurement[] | null = null;
@@ -47,6 +48,13 @@ export function backfillMeasurements(): void {
 
 export function deleteEntry(entry: Entry): void {
   cache = removeEntry(snapshot(), entry);
+  if (!demo) saveMeasurements(cache);
+  listeners.forEach((l) => l());
+}
+
+/** Records or changes the arm and position of one cuff reading. Does not reach Apple Health if the reading was already sent. */
+export function setBpContext(source: string, takenAt: number, context: BpContext): void {
+  cache = withBpContext(snapshot(), source, takenAt, context);
   if (!demo) saveMeasurements(cache);
   listeners.forEach((l) => l());
 }

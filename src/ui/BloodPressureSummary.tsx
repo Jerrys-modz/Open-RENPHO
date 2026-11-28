@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { Pressable, StyleSheet, View } from 'react-native';
-import { BP_CATEGORY_COLOR, BP_CATEGORY_LABEL, averageBp, classifyBp, type BpReading } from '@/domain/bloodPressure';
+import { BP_CATEGORY_COLOR, BP_CATEGORY_LABEL, averageBp, bpContextText, classifyBp, type BpReading } from '@/domain/bloodPressure';
 import { formatDateTime } from '@/util/format';
 import { formatForDisplay, type PressureUnit, type UnitSystem } from '@/util/units';
 import { Card } from './components';
@@ -24,6 +24,11 @@ export function BloodPressureSummary({ readings, units, pressure, showLatest = t
   const category = classifyBp(latest.systolic, latest.diastolic);
   const fmt = (v: number) => formatForDisplay(BP_DEF, v, units, pressure).text;
   const pair = (s: number, d: number) => `${fmt(s)}/${fmt(d)}`;
+  const notes = [
+    bpContextText(latest),
+    latest.irregularPulse && 'Irregular pulse flagged',
+    latest.bodyMovement && 'Movement during reading',
+  ].filter((n): n is string => typeof n === 'string');
   const windows = [
     { label: '7-day average', avg: averageBp(readings, 7) },
     { label: '30-day average', avg: averageBp(readings, 30) },
@@ -53,11 +58,9 @@ export function BloodPressureSummary({ readings, units, pressure, showLatest = t
           </View>
         </View>
       )}
-      {(latest.irregularPulse || latest.bodyMovement) && showLatest && (
+      {showLatest && notes.length > 0 && (
         <ThemedText subtle style={styles.small}>
-          {[latest.irregularPulse && 'Irregular pulse flagged', latest.bodyMovement && 'Movement during reading']
-            .filter(Boolean)
-            .join(' · ')}
+          {notes.join(' · ')}
         </ThemedText>
       )}
       <View style={styles.averages}>

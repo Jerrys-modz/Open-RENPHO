@@ -1,5 +1,5 @@
 import type { Measurement } from '../measurement';
-import { averageBp, bpReadings, classifyBp } from '../bloodPressure';
+import { averageBp, bpContextMeasurements, bpContextOf, bpContextText, bpReadings, classifyBp } from '../bloodPressure';
 
 const DAY = 24 * 60 * 60 * 1000;
 const m = (type: Measurement['type'], value: number, takenAt: number, source = 'ihealth-kn550bt'): Measurement => ({
@@ -56,5 +56,30 @@ describe('averageBp', () => {
 
   it('is null with no readings', () => {
     expect(averageBp([], 7)).toBeNull();
+  });
+});
+
+describe('arm and position', () => {
+  it('stores one row per field that is set, and none for the rest', () => {
+    expect(bpContextMeasurements('s', 5, { arm: 'left', position: null })).toEqual([{ type: 'bp_arm', value: 1, takenAt: 5, source: 's', site: 'left' }]);
+    expect(bpContextMeasurements('s', 5, { arm: null, position: null })).toEqual([]);
+    expect(bpContextMeasurements('s', 5, { arm: 'right', position: 'lying' }).map((m) => [m.type, m.site])).toEqual([
+      ['bp_arm', 'right'],
+      ['bp_position', 'lying'],
+    ]);
+  });
+
+  it('reads them back onto the reading', () => {
+    const list = [...reading(1000, 120, 80), ...bpContextMeasurements('ihealth-kn550bt', 1000, { arm: 'right', position: 'sitting' }), ...reading(2000, 130, 85)];
+    const [newer, older] = bpReadings(list);
+    expect(older).toMatchObject({ arm: 'right', position: 'sitting' });
+    expect(newer).toMatchObject({ arm: null, position: null });
+  });
+
+  it('ignores a context row without a valid site and describes what is set', () => {
+    expect(bpContextOf([m('bp_arm', 1, 1)])).toEqual({ arm: null, position: null });
+    expect(bpContextText({ arm: 'left', position: 'sitting' })).toBe('Left arm · sitting');
+    expect(bpContextText({ arm: null, position: 'lying' })).toBe('lying down');
+    expect(bpContextText({ arm: null, position: null })).toBeNull();
   });
 });

@@ -1,3 +1,4 @@
+import { bpContextOf, type BpContext } from '@/domain/bloodPressure';
 import type { Measurement } from '@/domain/measurement';
 
 /** The HealthKit sample types we write. Everything else (water, bone, BMR...) has no Apple Health home. */
@@ -64,7 +65,7 @@ export function toHealthSample(m: Measurement): HealthSample | null {
 }
 
 /** One cuff reading as HealthKit stores it: systolic and diastolic together, in mmHg. */
-export interface BloodPressureSample {
+export interface BloodPressureSample extends BpContext {
   systolic: number;
   diastolic: number;
   /** Unix ms. */
@@ -77,10 +78,12 @@ export interface BloodPressureSample {
 export function pendingBloodPressure(all: readonly Measurement[], synced: ReadonlySet<string>): BloodPressureSample[] {
   const sys = new Map<string, Measurement>();
   const dia = new Map<string, Measurement>();
+  const context = new Map<string, Measurement[]>();
   for (const m of all) {
     const id = `${m.source}|${m.takenAt}`;
     if (m.type === 'bp_systolic') sys.set(id, m);
     else if (m.type === 'bp_diastolic') dia.set(id, m);
+    else if (m.type === 'bp_arm' || m.type === 'bp_position') context.set(id, [...(context.get(id) ?? []), m]);
   }
   const out: BloodPressureSample[] = [];
   for (const [id, s] of sys) {
@@ -88,9 +91,27 @@ export function pendingBloodPressure(all: readonly Measurement[], synced: Readon
     if (!d) continue;
     const keys: [string, string] = [measurementKey(s), measurementKey(d)];
     if (synced.has(keys[0]) && synced.has(keys[1])) continue;
-    out.push({ systolic: s.value, diastolic: d.value, date: s.takenAt, keys });
+    out.push({ systolic: s.value, diastolic: d.value, date: s.takenAt, keys, ...bpContextOf(context.get(id) ?? []) });
   }
   return out;
+}
+
+export type HealthMetadata = Record<string, string | number>;
+
+/**
+ * What to attach to a blood-pressure entry about how it was taken, most to least informative.
+ * HealthKit has no blood-pressure arm or position field, and the Health app shows neither, so this
+ * is for other apps and exports that read the sample. `HKDevicePlacementSide` is Apple's own key for
+ * the side of the body a device sat on (1 left, 2 right); the Keel keys are plain strings. The writer
+ * tries each in turn and finally none, so a rejected key can never stop a reading from syncing.
+ */
+export function bloodPressureMetadataAttempts(s: BpContext): HealthMetadata[] {
+  const custom: HealthMetadata = {};
+  if (s.arm) custom.KeelBloodPressureArm = s.arm;
+  if (s.position) custom.KeelBodyPosition = s.position;
+  if (Object.keys(custom).length === 0) return [];
+  if (!s.arm) return [custom];
+  return [{ ...custom, HKDevicePlacementSide: s.arm === 'left' ? 1 : 2 }, custom];
 }
 
 /** The samples still to write: mappable and not in `synced`. */

@@ -80,6 +80,8 @@ export function demoMeasurements(): Measurement[] {
     out.push({ type: 'bp_diastolic', value: dia, takenAt, source: 'ihealth-kn550bt' });
     out.push({ type: 'pulse', value: 66 + Math.round(Math.sin(i / 2) * 4), takenAt, source: 'ihealth-kn550bt' });
     if (i === 10) out.push({ type: 'irregular_pulse', value: 1, takenAt, source: 'ihealth-kn550bt' });
+    out.push({ type: 'bp_arm', value: 1, takenAt, source: 'ihealth-kn550bt', site: 'left' });
+    out.push({ type: 'bp_position', value: 1, takenAt, source: 'ihealth-kn550bt', site: 'sitting' });
   }
   const sites: [string, number, number][] = [
     ['waist', 91.0, -0.7],

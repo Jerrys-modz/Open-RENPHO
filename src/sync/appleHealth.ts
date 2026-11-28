@@ -3,7 +3,7 @@
  * loads until the user turns this on, and so tests and non-iOS builds never touch it.
  */
 import { Platform } from 'react-native';
-import { HEALTH_WRITE_TYPES, type BloodPressureSample, type HealthSample } from './appleHealthMapping';
+import { HEALTH_WRITE_TYPES, bloodPressureMetadataAttempts, type BloodPressureSample, type HealthSample } from './appleHealthMapping';
 
 const load = () => import('@kingstinct/react-native-healthkit');
 
@@ -55,21 +55,28 @@ export async function writeAppleHealthBloodPressure(samples: readonly BloodPress
   const written: string[] = [];
   let failed = 0;
   for (const s of samples) {
-    try {
-      const d = new Date(s.date);
-      await hk.saveCorrelationSample(
-        'HKCorrelationTypeIdentifierBloodPressure',
-        [
-          { quantityType: 'HKQuantityTypeIdentifierBloodPressureSystolic', quantity: s.systolic, unit: 'mmHg', startDate: d, endDate: d },
-          { quantityType: 'HKQuantityTypeIdentifierBloodPressureDiastolic', quantity: s.diastolic, unit: 'mmHg', startDate: d, endDate: d },
-        ] as never,
-        d,
-        d,
-      );
-      written.push(...s.keys);
-    } catch (e) {
+    const d = new Date(s.date);
+    const pair = [
+      { quantityType: 'HKQuantityTypeIdentifierBloodPressureSystolic', quantity: s.systolic, unit: 'mmHg', startDate: d, endDate: d },
+      { quantityType: 'HKQuantityTypeIdentifierBloodPressureDiastolic', quantity: s.diastolic, unit: 'mmHg', startDate: d, endDate: d },
+    ] as never;
+    // Arm and position go along when we have them; if HealthKit rejects them the reading still goes without.
+    const attempts: (Record<string, string | number> | undefined)[] = [...bloodPressureMetadataAttempts(s), undefined];
+    let saved = false;
+    let lastError: unknown;
+    for (const metadata of attempts) {
+      try {
+        await hk.saveCorrelationSample('HKCorrelationTypeIdentifierBloodPressure', pair, d, d, metadata as never);
+        saved = true;
+        break;
+      } catch (e) {
+        lastError = e;
+      }
+    }
+    if (saved) written.push(...s.keys);
+    else {
       failed += 1;
-      console.warn('[health] could not save blood pressure', e);
+      console.warn('[health] could not save blood pressure', lastError);
     }
   }
   return { written, failed };
