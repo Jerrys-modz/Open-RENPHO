@@ -55,7 +55,11 @@ export default function GoalsScreen() {
   const latest = latestKg === null ? null : formatForDisplay({ unit: 'kg', digits: 1 }, latestKg, units);
 
   return (
-    <ScrollView contentContainerStyle={styles.container} keyboardShouldPersistTaps="handled">
+    <ScrollView
+      contentContainerStyle={styles.container}
+      contentInsetAdjustmentBehavior="automatic"
+      keyboardShouldPersistTaps="handled"
+    >
       <ThemedText subtle style={styles.intro}>
         Goals stay on your phone and are never synced. Leave a goal empty to have none.
       </ThemedText>
