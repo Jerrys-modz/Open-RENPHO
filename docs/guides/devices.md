@@ -43,9 +43,22 @@ Keel pairs, sets the cuff's clock to the phone's time, and downloads the stored 
 
 The **clear the cuff after importing** switch is off by default. When on, the cuff's memory is cleared only after every reading has been downloaded and saved in Keel. It cannot be undone.
 
-**Which arm, and sitting or standing.** The cuff does not know, so you tell Keel. On the **Blood pressure** screen, under *How you usually measure*, pick your usual arm (left or right) and position (sitting, standing or lying). They are applied to the new readings each sync imports. To correct a single reading, open **History**, tap **Edit** on it, and change its arm or position. A sync never overwrites a reading you already corrected, even though the cuff sends everything it holds again. Leave a field on *Not set* to record nothing.
+**Which arm, sitting or standing, and a note.** The cuff does not know, so you tell Keel. On the **Blood pressure** screen, under *How you usually measure*, pick your usual arm (left or right) and position (sitting, standing, lying or reclining). They are applied to the new readings each sync imports. To correct a single reading, open **History**, tap **Edit** on it, and change its arm or position, or type a note (up to 500 characters, for example "after coffee"). A sync never overwrites a reading you already corrected, even though the cuff sends everything it holds again. Leave a field on *Not set* to record nothing.
+
+**Chart and averages.** The Blood pressure screen charts systolic and diastolic together, with the space between them shaded. Choose 7 days, 30 days, 90 days or All; the window ends at your newest reading. Press and drag on the chart to read a single reading. Below it are 7 and 30 day averages and the 30 day averages for readings before noon and from noon on (by the phone's clock).
+
+**A report for your doctor.** *Share report for your doctor* makes a PDF for the chosen period, with the summary (average, before-noon and noon-onward averages, highest and lowest, how many readings fall in each category) and a table of every reading with its arm, position, flags and notes. It is made on the phone and opens the iOS share sheet; nothing is uploaded. The pressures use your display unit (mmHg or kPa).
 
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
+
+## Goals
+
+Open the profile screen and tap **Goals**.
+
+- **Target weight.** Enter a weight in your display units. Keel counts progress from your latest weight at the moment you save, so the Overview card shows how much of the way you are and how much is left, for losing or gaining. Saving again starts progress from your then-current weight. Leave the field empty for no goal.
+- **Blood-pressure target.** Turn it on and set the systolic and diastolic numbers readings should be below (130 and 80 by default, the usual adult target; ask your doctor what is right for you). The Blood pressure screen then shows how many of the readings in the 30 days up to your newest one were below both numbers. Targets are entered in mmHg.
+
+Goals stay on your phone and are never synced.
 
 ## Units
 

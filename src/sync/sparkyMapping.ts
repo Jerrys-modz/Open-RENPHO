@@ -21,6 +21,8 @@ export interface SparkyRecord {
   pulse_bpm?: number;
   arm?: string;
   body_position?: string;
+  /** Up to 500 characters; the server trims and cuts anything longer. */
+  note?: string;
 }
 
 export interface SparkyItem {
@@ -82,18 +84,20 @@ export interface SparkyBpExtras {
   pulse?: number;
   arm?: string;
   position?: string;
+  note?: string;
 }
 
 /** Pulse, arm and position of each cuff reading, found among all measurements. */
 function bpExtrasByReading(all: readonly Measurement[]): Map<string, SparkyBpExtras> {
   const out = new Map<string, SparkyBpExtras>();
   for (const m of all) {
-    if (m.type !== 'pulse' && m.type !== 'bp_arm' && m.type !== 'bp_position') continue;
+    if (m.type !== 'pulse' && m.type !== 'bp_arm' && m.type !== 'bp_position' && m.type !== 'bp_note') continue;
     const id = `${m.source}|${m.takenAt}`;
     const e = out.get(id) ?? {};
     if (m.type === 'pulse') e.pulse = Math.round(m.value);
     else if (m.type === 'bp_arm' && m.site) e.arm = m.site;
     else if (m.type === 'bp_position' && m.site) e.position = m.site;
+    else if (m.type === 'bp_note' && m.site) e.note = m.site;
     out.set(id, e);
   }
   return out;
@@ -125,6 +129,7 @@ export function toSparkyItem(m: Measurement, includeExtras: boolean, bp?: Sparky
       ...(bp?.pulse !== undefined ? { pulse_bpm: bp.pulse } : {}),
       ...(bp?.arm ? { arm: bp.arm } : {}),
       ...(bp?.position ? { body_position: bp.position } : {}),
+      ...(bp?.note ? { note: bp.note } : {}),
     };
     return it;
   }

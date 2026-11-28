@@ -166,6 +166,7 @@ export default function ProfileScreen() {
       ))}
 
       <Button title="Save profile" onPress={save} style={styles.button} />
+      <Button title="Goals" variant="secondary" onPress={() => router.push('/goals')} style={styles.button} />
       <SectionTitle>Beurer scale user</SectionTitle>
       {pairing && (
         <Card style={styles.athlete}>

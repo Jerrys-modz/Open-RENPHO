@@ -6,6 +6,8 @@ import {
   formatForDisplay,
   heightToInput,
   parseHeightToCm,
+  parseWeightToKg,
+  weightToInput,
 } from '../units';
 
 describe('convertValue / formatForDisplay', () => {
@@ -78,5 +80,19 @@ describe('blood pressure units', () => {
   it('converts a change in pressure too', () => {
     expect(formatDeltaForDisplay(bp, 10, 'metric', 'kPa')).toEqual({ text: '+1.3', unit: 'kPa' });
     expect(formatDeltaForDisplay(bp, -10, 'metric')).toEqual({ text: '-10', unit: 'mmHg' });
+  });
+});
+
+describe('weight input', () => {
+  it('parses what was typed in the current system into kg', () => {
+    expect(parseWeightToKg('165', 'imperial')).toBeCloseTo(74.84, 1);
+    expect(parseWeightToKg('74,5', 'metric')).toBe(74.5);
+    expect(parseWeightToKg('', 'metric')).toBeNaN();
+    expect(parseWeightToKg('abc', 'imperial')).toBeNaN();
+  });
+
+  it('shows kg the way it would be typed', () => {
+    expect(weightToInput(74.84, 'metric')).toBe('74.8');
+    expect(weightToInput(74.84, 'imperial')).toBe('165.0');
   });
 });

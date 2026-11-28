@@ -1,4 +1,4 @@
-import { bpContextMeasurements, NO_BP_CONTEXT, type BpContext } from '@/domain/bloodPressure';
+import { bpContextMeasurements, NO_BP_CONTEXT, type BpContext, type BpDefaults } from '@/domain/bloodPressure';
 import type { Measurement } from '@/domain/measurement';
 import type { CuffReading } from './protocol';
 
@@ -27,8 +27,8 @@ export function readingToMeasurements(r: CuffReading, context: BpContext = NO_BP
 export function importedMeasurements(
   existing: readonly Measurement[],
   readings: readonly CuffReading[],
-  defaults: BpContext,
+  defaults: BpDefaults,
 ): Measurement[] {
   const have = new Set(existing.filter((m) => m.source === IHEALTH_SOURCE && m.type === 'bp_systolic').map((m) => m.takenAt));
-  return readings.flatMap((r) => readingToMeasurements(r, have.has(r.takenAt) ? NO_BP_CONTEXT : defaults));
+  return readings.flatMap((r) => readingToMeasurements(r, have.has(r.takenAt) ? NO_BP_CONTEXT : { ...defaults, note: null }));
 }

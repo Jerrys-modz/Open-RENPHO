@@ -1,5 +1,5 @@
 import type { Measurement } from '../measurement';
-import { averageBp, bpContextMeasurements, bpContextOf, bpContextText, bpReadings, classifyBp } from '../bloodPressure';
+import { averageBp, averageByPartOfDay, bpContextMeasurements, bpContextOf, bpContextText, bpReadings, bpStats, classifyBp, readingsInWindow } from '../bloodPressure';
 
 const DAY = 24 * 60 * 60 * 1000;
 const m = (type: Measurement['type'], value: number, takenAt: number, source = 'ihealth-kn550bt'): Measurement => ({
@@ -61,25 +61,59 @@ describe('averageBp', () => {
 
 describe('arm and position', () => {
   it('stores one row per field that is set, and none for the rest', () => {
-    expect(bpContextMeasurements('s', 5, { arm: 'left', position: null })).toEqual([{ type: 'bp_arm', value: 1, takenAt: 5, source: 's', site: 'left' }]);
-    expect(bpContextMeasurements('s', 5, { arm: null, position: null })).toEqual([]);
-    expect(bpContextMeasurements('s', 5, { arm: 'right', position: 'lying' }).map((m) => [m.type, m.site])).toEqual([
+    expect(bpContextMeasurements('s', 5, { arm: 'left', position: null, note: null })).toEqual([{ type: 'bp_arm', value: 1, takenAt: 5, source: 's', site: 'left' }]);
+    expect(bpContextMeasurements('s', 5, { arm: null, position: null, note: null })).toEqual([]);
+    expect(bpContextMeasurements('s', 5, { arm: 'right', position: 'lying', note: null }).map((m) => [m.type, m.site])).toEqual([
       ['bp_arm', 'right'],
       ['bp_position', 'lying'],
     ]);
   });
 
   it('reads them back onto the reading', () => {
-    const list = [...reading(1000, 120, 80), ...bpContextMeasurements('ihealth-kn550bt', 1000, { arm: 'right', position: 'sitting' }), ...reading(2000, 130, 85)];
+    const list = [...reading(1000, 120, 80), ...bpContextMeasurements('ihealth-kn550bt', 1000, { arm: 'right', position: 'sitting', note: null }), ...reading(2000, 130, 85)];
     const [newer, older] = bpReadings(list);
-    expect(older).toMatchObject({ arm: 'right', position: 'sitting' });
-    expect(newer).toMatchObject({ arm: null, position: null });
+    expect(older).toMatchObject({ arm: 'right', position: 'sitting', note: null });
+    expect(newer).toMatchObject({ arm: null, position: null, note: null });
   });
 
   it('ignores a context row without a valid site and describes what is set', () => {
-    expect(bpContextOf([m('bp_arm', 1, 1)])).toEqual({ arm: null, position: null });
+    expect(bpContextOf([m('bp_arm', 1, 1)])).toEqual({ arm: null, position: null, note: null });
     expect(bpContextText({ arm: 'left', position: 'sitting' })).toBe('Left arm · sitting');
     expect(bpContextText({ arm: null, position: 'lying' })).toBe('lying down');
     expect(bpContextText({ arm: null, position: null })).toBeNull();
+  });
+});
+
+describe('note, reclining and time of day', () => {
+  it('stores a trimmed note and reads it back; empty notes store nothing', () => {
+    const rows = bpContextMeasurements('s', 5, { arm: null, position: 'reclining', note: '  after coffee  ' });
+    expect(rows.map((x) => [x.type, x.site])).toEqual([['bp_position', 'reclining'], ['bp_note', 'after coffee']]);
+    expect(bpContextOf(rows)).toEqual({ arm: null, position: 'reclining', note: 'after coffee' });
+    expect(bpContextMeasurements('s', 5, { arm: null, position: null, note: '   ' })).toEqual([]);
+  });
+
+  it('cuts a note at the limit', () => {
+    const rows = bpContextMeasurements('s', 5, { arm: null, position: null, note: 'x'.repeat(600) });
+    expect(rows[0].site).toHaveLength(500);
+  });
+
+  it('averages before noon and from noon on separately, and picks a window', () => {
+    const at = (h: number, d: number) => new Date(2026, 10, d, h).getTime();
+    const list = bpReadings([...reading(at(7, 20), 110, 70), ...reading(at(8, 21), 130, 90), ...reading(at(20, 21), 150, 100), ...reading(at(7, 1), 200, 120)]);
+    const { morning, evening } = averageByPartOfDay(list, 7);
+    expect(morning).toMatchObject({ systolic: 120, diastolic: 80, count: 2 });
+    expect(evening).toMatchObject({ systolic: 150, diastolic: 100, count: 1 });
+    expect(readingsInWindow(list, 7).map((x) => x.takenAt)).toEqual([at(7, 20), at(8, 21), at(20, 21)]);
+    expect(readingsInWindow(list, null)).toHaveLength(4);
+  });
+
+  it('counts categories and finds the extremes', () => {
+    const list = bpReadings([...reading(1000, 118, 76), ...reading(2000, 135, 85), ...reading(3000, 150, 95)]);
+    const s = bpStats(list)!;
+    expect(s.count).toBe(3);
+    expect(s.categories).toMatchObject({ normal: 1, stage1: 1, stage2: 1 });
+    expect(s.highest.systolic).toBe(150);
+    expect(s.lowest.systolic).toBe(118);
+    expect(bpStats([])).toBeNull();
   });
 });

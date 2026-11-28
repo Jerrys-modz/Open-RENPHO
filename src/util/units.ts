@@ -82,3 +82,16 @@ export function parseHeightToCm(text: string, system: UnitSystem): number {
   const inches = Number(t);
   return Number.isFinite(inches) && t !== '' ? inches * CM_PER_IN : NaN;
 }
+
+/** A weight typed in the current system, as kg. NaN when it cannot be understood. */
+export function parseWeightToKg(text: string, system: UnitSystem): number {
+  const t = text.trim().replace(',', '.');
+  const n = Number(t);
+  if (t === '' || !Number.isFinite(n)) return NaN;
+  return system === 'imperial' ? n / LB_PER_KG : n;
+}
+
+/** A weight in kg as the user would type it in the current system, one decimal. */
+export function weightToInput(kg: number, system: UnitSystem): string {
+  return (system === 'imperial' ? kg * LB_PER_KG : kg).toFixed(1);
+}
