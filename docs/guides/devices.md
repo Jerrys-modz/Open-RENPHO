@@ -47,6 +47,12 @@ The **clear the cuff after importing** switch is off by default. When on, the cu
 
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
 
+## Home screen widget
+
+Press and hold the Home Screen, tap **+**, search for **Keel** and add the small or medium widget. It shows your latest weight and latest blood pressure (with its category), in your display units, and refreshes whenever Keel saves a reading.
+
+Anything on the Home Screen can be seen by people who can see your phone, so add it only where you are happy for your numbers to show. The widget gets its numbers from the app through storage shared on the phone; nothing is sent anywhere.
+
 ## Units
 
 On the profile screen you can choose lb/in or kg/cm, and mmHg or kPa for blood pressure. This changes the display only. Everything is stored in kg, cm and mmHg, and syncs and CSV exports use those units.

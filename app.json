@@ -32,7 +32,26 @@
           "background": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-widgets",
+        {
+          "widgets": [
+            {
+              "name": "KeelWidget",
+              "displayName": "Keel",
+              "description": "Your latest weight and blood pressure.",
+              "ios": {
+                "supportedFamilies": [
+                  "systemSmall",
+                  "systemMedium"
+                ],
+                "initialLayout": "./src/widget/KeelWidget.tsx"
+              }
+            }
+          ]
+        }
+      ]
     ],
     "scheme": "keel",
     "experiments": {

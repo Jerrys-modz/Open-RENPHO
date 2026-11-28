@@ -3,10 +3,12 @@ import { StatusBar } from 'expo-status-bar';
 import { SymbolView } from 'expo-symbols';
 import { Pressable, useColorScheme, View } from 'react-native';
 import { navigationTheme, palette } from '@/ui/theme';
+import { useWidgetSync } from '@/widget/useWidgetSync';
 
 export default function RootLayout() {
   const scheme = useColorScheme();
   const colors = palette(scheme);
+  useWidgetSync();
   return (
     <ThemeProvider value={navigationTheme(scheme)}>
       <Stack screenOptions={{ headerShadowVisible: false }}>
