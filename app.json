@@ -32,7 +32,13 @@
           "background": false
         }
       ],
-      "expo-secure-store"
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ]
     ],
     "scheme": "keel",
     "experiments": {

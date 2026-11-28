@@ -47,6 +47,12 @@ The **clear the cuff after importing** switch is off by default. When on, the cu
 
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
 
+## Reminders
+
+Open the profile screen and tap **Reminders**. You can turn on a daily **weigh-in** reminder and a daily **blood-pressure** reminder, each at a time you choose. The first time you switch one on, iOS asks whether Keel may send notifications; if you decline, Keel offers to open Settings so you can allow them.
+
+A reminder is a notification created on your phone that repeats every day. Nothing is sent anywhere, and the text is generic ("Time to weigh in"), so it never shows a reading on the lock screen. Tapping it opens the weigh-in or blood-pressure screen. Reminders fire whether or not you have already measured that day.
+
 ## Units
 
 On the profile screen you can choose lb/in or kg/cm, and mmHg or kPa for blood pressure. This changes the display only. Everything is stored in kg, cm and mmHg, and syncs and CSV exports use those units.
