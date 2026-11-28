@@ -7,6 +7,8 @@ import { getBpDefaults, setBpDefaults, useBpDefaults, usePressureUnit, useUnits 
 import { syncAll } from '@/sync';
 import { BP_CATEGORY_COLOR, BP_CATEGORY_LABEL, bpReadings, classifyBp, readingsInWindow } from '@/domain/bloodPressure';
 import { BloodPressureChart } from '@/ui/BloodPressureChart';
+import { BpTargetCard } from '@/ui/BpTargetCard';
+import { useGoals } from '@/storage/useGoals';
 import { BloodPressureSummary } from '@/ui/BloodPressureSummary';
 import { Button, Card } from '@/ui/components';
 import { Segmented } from '@/ui/Segmented';
@@ -43,6 +45,7 @@ export default function BloodPressureScreen() {
   const latest = readings[0];
   const units = useUnits();
   const defaults = useBpDefaults();
+  const goals = useGoals();
 
   const chosen = RANGES.find((r) => r.value === range) ?? RANGES[1];
   const inRange = readingsInWindow(readings, chosen.days);
@@ -133,6 +136,7 @@ export default function BloodPressureScreen() {
       )}
 
       <BloodPressureSummary readings={readings} units={units} pressure={pressure} showLatest={false} showTimeOfDay />
+      {goals.bp && <BpTargetCard readings={readings} target={goals.bp} pressure={pressure} />}
 
       {result && <ThemedText>{result}</ThemedText>}
       {error && <ThemedText style={styles.error}>{error}</ThemedText>}

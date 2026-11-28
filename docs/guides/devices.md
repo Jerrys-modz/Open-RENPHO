@@ -51,6 +51,15 @@ The **clear the cuff after importing** switch is off by default. When on, the cu
 
 The overview card shows a category for the latest reading (2017 ACC/AHA adult guidelines) and 7 and 30 day averages ending at your newest reading. This is for information only and is not medical advice.
 
+## Goals
+
+Open the profile screen and tap **Goals**.
+
+- **Target weight.** Enter a weight in your display units. Keel counts progress from your latest weight at the moment you save, so the Overview card shows how much of the way you are and how much is left, for losing or gaining. Saving again starts progress from your then-current weight. Leave the field empty for no goal.
+- **Blood-pressure target.** Turn it on and set the systolic and diastolic numbers readings should be below (130 and 80 by default, the usual adult target; ask your doctor what is right for you). The Blood pressure screen then shows how many of the readings in the 30 days up to your newest one were below both numbers. Targets are entered in mmHg.
+
+Goals stay on your phone and are never synced.
+
 ## Units
 
 On the profile screen you can choose lb/in or kg/cm, and mmHg or kPa for blood pressure. This changes the display only. Everything is stored in kg, cm and mmHg, and syncs and CSV exports use those units.
