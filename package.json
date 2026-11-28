@@ -4,6 +4,7 @@
   "license": "MIT",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo/ui": "~58.0.30",
     "@kingstinct/react-native-healthkit": "^16.1.0",
     "@react-native-community/datetimepicker": "9.2.1",
     "expo": "~58.1.0",
@@ -15,6 +16,7 @@
     "expo-secure-store": "~58.0.3",
     "expo-status-bar": "~58.0.5",
     "expo-symbols": "~58.0.5",
+    "expo-widgets": "~58.0.30",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-native": "0.88.1",
