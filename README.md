@@ -105,4 +105,4 @@ RENPHO, Beurer, iHealth and Apple Health are trademarks of their respective owne
 
 ## License
 
-See [LICENSE](LICENSE). Privacy: see [PRIVACY.md](PRIVACY.md).
+Keel is released under the [MIT License](LICENSE). Third-party notices are in `THIRD_PARTY_NOTICES.md`. Privacy: see [PRIVACY.md](PRIVACY.md).

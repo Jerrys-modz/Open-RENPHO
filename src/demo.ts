@@ -4,9 +4,9 @@ import { deriveBodyMetrics } from '@/ble/qn/bodyMetrics';
 import type { Measurement } from '@/domain/measurement';
 import type { UserProfile } from '@/domain/profile';
 
-export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile' | 'capture';
+export type DemoScreen = 'home' | 'scale' | 'tape' | 'profile' | 'capture' | 'bp' | 'history';
 
-const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile', 'capture'];
+const SCREENS: readonly DemoScreen[] = ['home', 'scale', 'tape', 'profile', 'capture', 'bp', 'history'];
 
 export const DEMO_PROFILE: UserProfile = { sex: 'male', birthDate: '1983-03-14', heightCm: 178, athlete: false };
 

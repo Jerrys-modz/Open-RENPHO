@@ -90,7 +90,7 @@ export default function BloodPressureScreen() {
   };
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
+    <ScrollView contentInsetAdjustmentBehavior="automatic" contentContainerStyle={styles.container}>
       <Card style={styles.hero}>
         <ThemedText subtle>{status}</ThemedText>
         <ThemedText style={styles.value}>
